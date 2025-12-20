@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kiểm Tra Vé Số Việt Nam</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a1c2c 0%, #4a192c 100%);
+            min-height: 100vh;
+            color: white;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .gradient-text {
+            background: linear-gradient(90deg, #ff8a00, #e52e71);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        #video-container {
+            position: relative;
+            overflow: hidden;
+            border-radius: 1rem;
+        }
+
+        #camera-mask {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: 60%;
+            border: 2px dashed rgba(255, 255, 255, 0.5);
+            pointer-events: none;
+            display: none;
+        }
+
+        .loader {
+            border-top-color: #ff8a00;
+            animation: spinner 1.5s linear infinite;
+        }
+
+        @keyframes spinner {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body class="p-4 md:p-8">
+    <div class="max-w-2xl mx-auto">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold gradient-text mb-2">Check Vé Số AI</h1>
+            <p class="text-gray-400">Dò vé số tự động bằng Gemini AI</p>
+        </header>
+
+        <main class="space-y-6">
+            <!-- Upload / Camera Area -->
+            <div id="drop-zone"
+                class="glass rounded-2xl p-8 text-center border-2 border-dashed border-gray-600 hover:border-orange-500 transition-all cursor-pointer">
+                <div id="upload-ui">
+                    <i class="fas fa-cloud-upload-alt text-5xl text-orange-500 mb-4"></i>
+                    <p class="text-lg font-semibold">Kéo thả ảnh hoặc click để chọn</p>
+                    <p class="text-sm text-gray-400 mt-2">Hỗ trợ JPG, PNG, WEBP</p>
+                    <div class="mt-6 flex justify-center gap-4">
+                        <button id="open-camera"
+                            class="bg-orange-600 hover:bg-orange-700 px-6 py-2 rounded-lg font-bold transition-all">
+                            <i class="fas fa-camera mr-2"></i>Mở Camera
+                        </button>
+                    </div>
+                </div>
+
+                <div id="camera-ui" class="hidden space-y-4">
+                    <div id="video-container">
+                        <video id="video" class="w-full h-auto" autoplay playsinline></video>
+                        <div id="camera-mask"></div>
+                    </div>
+                    <div class="flex justify-center gap-4">
+                        <button id="capture-btn" class="bg-red-600 hover:bg-red-700 p-4 rounded-full transition-all">
+                            <i class="fas fa-circle text-2xl"></i>
+                        </button>
+                        <button id="close-camera" class="bg-gray-700 hover:bg-gray-800 p-4 rounded-full transition-all">
+                            <i class="fas fa-times text-2xl"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <input type="file" id="file-input" class="hidden" accept="image/*">
+            </div>
+
+            <!-- Preview & Status -->
+            <div id="preview-section" class="hidden glass rounded-2xl p-4 overflow-hidden">
+                <img id="preview-img" src="" alt="Preview" class="w-full h-auto rounded-lg mb-4">
+                <div id="status" class="flex items-center justify-center p-4">
+                    <div id="loading" class="hidden flex flex-col items-center">
+                        <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-10 w-10 mb-4">
+                        </div>
+                        <p>Đang xử lý bằng AI...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div id="results-section" class="hidden glass rounded-2xl p-6 space-y-4 border-l-4 border-blue-500">
+                <h2 class="text-2xl font-bold">Thông tin vé số:</h2>
+                <div class="grid grid-cols-2 gap-4 text-sm md:text-base">
+                    <div class="bg-white/5 p-3 rounded-lg">
+                        <span class="text-gray-400 block">Tỉnh thành</span>
+                        <span id="res-province" class="font-bold text-orange-400">-</span>
+                    </div>
+                    <div class="bg-white/5 p-3 rounded-lg">
+                        <span class="text-gray-400 block">Ngày mở thưởng</span>
+                        <span id="res-date" class="font-bold text-orange-400">-</span>
+                    </div>
+                    <div class="bg-white/5 p-3 rounded-lg col-span-2">
+                        <span class="text-gray-400 block">Số của bạn</span>
+                        <span id="res-number" class="text-3xl font-black tracking-widest text-white">-</span>
+                    </div>
+                </div>
+
+                <div id="win-status" class="mt-6">
+                    <!-- Win result will be injected here -->
+                </div>
+
+                <div class="mt-8 flex justify-center">
+                    <button onclick="window.location.reload()"
+                        class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg font-bold transition-all">
+                        <i class="fas fa-sync-alt mr-2"></i>Quét vé mới
+                    </button>
+                </div>
+            </div>
+
+            <!-- Error Section -->
+            <div id="error-section" class="hidden bg-red-900/50 border border-red-500 rounded-2xl p-4 text-center">
+                <p id="error-msg" class="text-red-200"></p>
+                <button onclick="resetUI()" class="mt-2 text-sm underline opacity-70">Thử lại</button>
+            </div>
+        </main>
+
+        <footer class="mt-12 text-center text-gray-500 text-sm">
+            Powered by Gemini 2.5 Flash & Minh Ngọc Result Service
+        </footer>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const video = document.getElementById('video');
+        const cameraUI = document.getElementById('camera-ui');
+        const uploadUI = document.getElementById('upload-ui');
+        const previewSection = document.getElementById('preview-section');
+        const previewImg = document.getElementById('preview-img');
+        const status = document.getElementById('status');
+        const loading = document.getElementById('loading');
+        const resultsSection = document.getElementById('results-section');
+        const errorSection = document.getElementById('error-section');
+        const errorMsg = document.getElementById('error-msg');
+
+        // --- Web Camera Logic ---
+        document.getElementById('open-camera').addEventListener('click', async (e) => {
+            e.stopPropagation();
+
+            // Kiểm tra xem trình duyệt có hỗ trợ camera không
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                let errorMsg = 'Trình duyệt của bạn không hỗ trợ truy cập Camera.';
+                if (!window.isSecureContext) {
+                    errorMsg += ' (Lưu ý: Camera chỉ hoạt động trên HTTPS hoặc localhost. Nếu bạn đang dùng IP, hãy thiết lập HTTPS hoặc dùng trình duyệt hỗ trợ HTTP local).';
+                }
+                alert(errorMsg);
+                return;
+            }
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                });
+                video.srcObject = stream;
+                uploadUI.classList.add('hidden');
+                cameraUI.classList.remove('hidden');
+            } catch (err) {
+                console.error('Camera error:', err);
+                if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                    alert('Bạn đã chặn quyền truy cập Camera. Vui lòng vào cài đặt trình duyệt để cấp quyền.');
+                } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+                    alert('Không tìm thấy Camera trên thiết bị của bạn.');
+                } else {
+                    alert('Lỗi truy cập Camera: ' + err.message);
+                }
+            }
+        });
+
+        document.getElementById('close-camera').addEventListener('click', (e) => {
+            e.stopPropagation();
+            stopCamera();
+        });
+
+        function stopCamera() {
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+            }
+            cameraUI.classList.add('hidden');
+            uploadUI.classList.remove('hidden');
+        }
+
+        document.getElementById('capture-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            const dataUrl = canvas.toDataURL('image/png');
+            stopCamera();
+            processImage(dataUrl);
+        });
+
+        // --- File Upload Logic ---
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-orange-500');
+        });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('border-orange-500'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-orange-500');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                handleFile(file);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) handleFile(file);
+        });
+
+        function handleFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => processImage(e.target.result);
+            reader.readAsDataURL(file);
+        }
+
+        function resetUI() {
+            previewSection.classList.add('hidden');
+            resultsSection.classList.add('hidden');
+            errorSection.classList.add('hidden');
+            loading.classList.add('hidden');
+            dropZone.classList.remove('hidden');
+            uploadUI.classList.remove('hidden');
+        }
+
+        async function processImage(dataUrl) {
+            resetUI();
+            dropZone.classList.add('hidden');
+            previewSection.classList.remove('hidden');
+            previewImg.src = dataUrl;
+            loading.classList.remove('hidden');
+
+            try {
+                const response = await fetch('/check', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: dataUrl })
+                });
+
+                const data = await response.json();
+                loading.classList.add('hidden');
+
+                if (data.success) {
+                    showResults(data);
+                } else {
+                    showError(data.error || 'Đã có lỗi xảy ra');
+                }
+            } catch (err) {
+                loading.classList.add('hidden');
+                showError('Không thể kết nối tới server: ' + err.message);
+            }
+        }
+
+        function showResults(data) {
+            resultsSection.classList.remove('hidden');
+            document.getElementById('res-province').textContent = data.info.province;
+            document.getElementById('res-date').textContent = data.info.date;
+            document.getElementById('res-number').textContent = data.info.number;
+
+            const winStatus = document.getElementById('win-status');
+            if (data.win_details && data.win_details.length > 0) {
+                resultsSection.classList.remove('border-blue-500');
+                resultsSection.classList.add('border-green-500');
+                winStatus.innerHTML = `
+                    <div class="bg-green-500 text-black font-black text-center p-4 rounded-xl animate-bounce">
+                        <i class="fas fa-trophy mr-2"></i> TRÚNG GIẢI: ${data.win_details.join(', ')}!!!
+                    </div>
+                `;
+            } else {
+                resultsSection.classList.remove('border-blue-500');
+                resultsSection.classList.add('border-gray-500');
+                winStatus.innerHTML = `
+                    <div class="bg-gray-700/50 text-gray-300 font-bold text-center p-4 rounded-xl">
+                        <i class="fas fa-sad-tear mr-2"></i> Chúc bạn may mắn lần sau
+                    </div>
+                `;
+            }
+
+            // Tự động lướt xuống kết quả
+            setTimeout(() => {
+                resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        }
+
+        function showError(msg) {
+            errorSection.classList.remove('hidden');
+            errorMsg.textContent = msg;
+        }
+    </script>
+</body>
+
+</html>
