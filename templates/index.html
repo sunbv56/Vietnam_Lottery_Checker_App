@@ -53,6 +53,11 @@
             animation: spinner 1.5s linear infinite;
         }
 
+        /* Lật mirror cho video */
+        .mirror {
+            transform: scaleX(-1);
+        }
+
         @keyframes spinner {
             0% {
                 transform: rotate(0deg);
@@ -96,6 +101,15 @@
                     <div class="flex justify-center gap-4">
                         <button id="capture-btn" class="bg-red-600 hover:bg-red-700 p-4 rounded-full transition-all">
                             <i class="fas fa-circle text-2xl"></i>
+                        </button>
+                        <button id="flash-toggle"
+                            class="bg-yellow-600 hover:bg-yellow-700 p-4 rounded-full transition-all hidden"
+                            title="Bật/Tắt Flash">
+                            <i class="fas fa-bolt text-2xl"></i>
+                        </button>
+                        <button id="flip-camera" class="bg-blue-600 hover:bg-blue-700 p-4 rounded-full transition-all"
+                            title="Lật gương">
+                            <i class="fas fa-arrows-alt-h text-2xl"></i>
                         </button>
                         <button id="close-camera" class="bg-gray-700 hover:bg-gray-800 p-4 rounded-full transition-all">
                             <i class="fas fa-times text-2xl"></i>
@@ -173,6 +187,11 @@
         const resultsSection = document.getElementById('results-section');
         const errorSection = document.getElementById('error-section');
         const errorMsg = document.getElementById('error-msg');
+        const flipBtn = document.getElementById('flip-camera');
+        const flashBtn = document.getElementById('flash-toggle');
+        let isMirrored = false;
+        let isFlashOn = false;
+        let videoTrack = null;
 
         // --- Web Camera Logic ---
         document.getElementById('open-camera').addEventListener('click', async (e) => {
@@ -197,6 +216,16 @@
                     }
                 });
                 video.srcObject = stream;
+                videoTrack = stream.getVideoTracks()[0];
+
+                // Kiểm tra hỗ trợ Flash (torch)
+                const capabilities = videoTrack.getCapabilities ? videoTrack.getCapabilities() : {};
+                if (capabilities.torch) {
+                    flashBtn.classList.remove('hidden');
+                } else {
+                    flashBtn.classList.add('hidden');
+                }
+
                 uploadUI.classList.add('hidden');
                 cameraUI.classList.remove('hidden');
             } catch (err) {
@@ -216,10 +245,45 @@
             stopCamera();
         });
 
+        flashBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            if (!videoTrack) return;
+
+            try {
+                isFlashOn = !isFlashOn;
+                await videoTrack.applyConstraints({
+                    advanced: [{ torch: isFlashOn }]
+                });
+                flashBtn.classList.toggle('bg-yellow-400', isFlashOn);
+                flashBtn.classList.toggle('bg-yellow-600', !isFlashOn);
+            } catch (err) {
+                console.error('Flash error:', err);
+                alert('Không thể điều khiển Flash trên trình duyệt này.');
+            }
+        });
+
+        flipBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            isMirrored = !isMirrored;
+            if (isMirrored) {
+                video.classList.add('mirror');
+            } else {
+                video.classList.remove('mirror');
+            }
+        });
+
         function stopCamera() {
             if (video.srcObject) {
+                // Tắt flash trước khi đóng nếu đang bật
+                if (isFlashOn && videoTrack) {
+                    videoTrack.applyConstraints({ advanced: [{ torch: false }] }).catch(() => { });
+                    isFlashOn = false;
+                    flashBtn.classList.remove('bg-yellow-400');
+                    flashBtn.classList.add('bg-yellow-600');
+                }
                 video.srcObject.getTracks().forEach(track => track.stop());
             }
+            videoTrack = null;
             cameraUI.classList.add('hidden');
             uploadUI.classList.remove('hidden');
         }
@@ -229,7 +293,14 @@
             const canvas = document.createElement('canvas');
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0);
+            const ctx = canvas.getContext('2d');
+
+            if (isMirrored) {
+                ctx.translate(canvas.width, 0);
+                ctx.scale(-1, 1);
+            }
+
+            ctx.drawImage(video, 0, 0);
             const dataUrl = canvas.toDataURL('image/png');
             stopCamera();
             processImage(dataUrl);
@@ -309,11 +380,18 @@
             if (data.win_details && data.win_details.length > 0) {
                 resultsSection.classList.remove('border-blue-500');
                 resultsSection.classList.add('border-green-500');
-                winStatus.innerHTML = `
-                    <div class="bg-green-500 text-black font-black text-center p-4 rounded-xl animate-bounce">
-                        <i class="fas fa-trophy mr-2"></i> TRÚNG GIẢI: ${data.win_details.join(', ')}!!!
-                    </div>
-                `;
+
+                let winHtml = '';
+                data.win_details.forEach(detail => {
+                    const formattedValue = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(detail.value);
+                    winHtml += `
+                        <div class="bg-green-500 text-black font-black text-center p-4 rounded-xl mb-3 animate-bounce">
+                            <i class="fas fa-trophy mr-2"></i> ${detail.name.toUpperCase()}<br>
+                            <span class="text-2xl">${formattedValue}</span>
+                        </div>
+                    `;
+                });
+                winStatus.innerHTML = winHtml;
             } else {
                 resultsSection.classList.remove('border-blue-500');
                 resultsSection.classList.add('border-gray-500');

@@ -47,6 +47,20 @@ MODELS_TO_TRY = [
     'gemini-2.0-flash'
 ]
 
+PRIZE_VALUES = {
+    "Giải Đặc Biệt": 2000000000,
+    "Giải Nhất": 30000000,
+    "Giải Nhì": 15000000,
+    "Giải Ba": 10000000,
+    "Giải Tư": 3000000,
+    "Giải Năm": 1000000,
+    "Giải Sáu": 400000,
+    "Giải Bảy": 200000,
+    "Giải Tám": 100000,
+    "Giải Phụ Đặc Biệt": 50000000,
+    "Giải Khuyến Khích": 6000000
+}
+
 def extract_ticket_info(image_bytes):
     """
     Sử dụng Gemini để trích xuất thông tin Tỉnh, Ngày và Số từ ảnh vé số.
@@ -62,6 +76,8 @@ def extract_ticket_info(image_bytes):
         "date": "ngày mở thưởng định dạng DD-MM-YYYY",
         "number": "dãy số dự thưởng, ví dụ: 093558"
     }
+    Tỉnh nằm trong danh sách sau:
+    {PROVINCE_MAP}
     Lưu ý: Chỉ trả về JSON, không thêm bất kỳ văn bản giải thích nào. Nếu không chắc chắn, hãy cố gắng đoán dựa trên thông tin rõ nhất.
     """
     
@@ -148,45 +164,64 @@ def crawl_kqxs_final(province_slug, date_str):
 
 def check_win(ticket_number, results):
     """
-    Compares the ticket number with the lottery results.
+    So khớp số vé với kết quả xổ số.
+    Trả về danh sách các giải trúng (tên giải và số tiền).
     """
     win_details = []
     
+    # Đảm bảo ticket_number là string và đủ 6 số (nếu là vé miền Nam)
+    ticket_number = str(ticket_number).strip()
+    
     for prize, winning_numbers in results.items():
         for win_num in winning_numbers:
-            # Check for trailing matches based on prize type
+            win_num = str(win_num).strip()
+            
+            # Logic so khớp đuôi cho các giải từ 8 đến 1
             if prize == 'Giải Tám':
                 if ticket_number.endswith(win_num):
-                    win_details.append(prize)
+                    win_details.append({"name": prize, "value": PRIZE_VALUES.get(prize, 0)})
             elif prize == 'Giải Bảy':
                 if ticket_number.endswith(win_num):
-                    win_details.append(prize)
+                    win_details.append({"name": prize, "value": PRIZE_VALUES.get(prize, 0)})
             elif prize == 'Giải Sáu':
                 if ticket_number.endswith(win_num):
-                    win_details.append(prize)
+                    win_details.append({"name": prize, "value": PRIZE_VALUES.get(prize, 0)})
             elif prize == 'Giải Năm':
                 if ticket_number.endswith(win_num):
-                    win_details.append(prize)
+                    win_details.append({"name": prize, "value": PRIZE_VALUES.get(prize, 0)})
             elif prize == 'Giải Tư':
                 if ticket_number.endswith(win_num):
-                    win_details.append(prize)
+                    win_details.append({"name": prize, "value": PRIZE_VALUES.get(prize, 0)})
             elif prize == 'Giải Ba':
                 if ticket_number.endswith(win_num):
-                    win_details.append(prize)
-            elif prize == 'Giải Nhất' or prize == 'Giải Nhì':
+                    win_details.append({"name": prize, "value": PRIZE_VALUES.get(prize, 0)})
+            elif prize == 'Giải Nhì':
                 if ticket_number.endswith(win_num):
-                    win_details.append(prize)
+                    win_details.append({"name": prize, "value": PRIZE_VALUES.get(prize, 0)})
+            elif prize == 'Giải Nhất':
+                if ticket_number.endswith(win_num):
+                    win_details.append({"name": prize, "value": PRIZE_VALUES.get(prize, 0)})
+            
+            # Giải Đặc Biệt và các giải liên quan
             elif prize == 'Giải Đặc Biệt':
                 if ticket_number == win_num:
-                    win_details.append(prize)
-                # Note: There are also "Giải Khuyến Khích" and "Giải Phụ Đặc Biệt" usually, 
-                # but for simplicity we'll check exact or common matches.
-                # Adding basic Special Prize logic:
+                    win_details.append({"name": prize, "value": PRIZE_VALUES.get(prize, 0)})
+                
+                # Logic cho vé 6 chữ số (Miền Nam/Miền Trung)
                 elif len(ticket_number) == 6 and len(win_num) == 6:
-                    # Check for "Giải Phụ Đặc Biệt" (match last 5 digits)
+                    # 1. Giải Phụ Đặc Biệt: Sai chữ số đầu tiên (hàng trăm ngàn), đúng 5 số cuối
                     if ticket_number[1:] == win_num[1:]:
-                         win_details.append("Giải Phụ Đặc Biệt")
-                    # Check for "Giải Khuyến Khích" (wrong only 1 number except the first one)
-                    # This is more complex, skipping for now or adding simple version.
+                        win_details.append({"name": "Giải Phụ Đặc Biệt", "value": PRIZE_VALUES.get("Giải Phụ Đặc Biệt", 0)})
+                    
+                    # 2. Giải Khuyến Khích: Đúng chữ số đầu tiên, sai đúng 1 trong 5 số còn lại
+                    elif ticket_number[0] == win_num[0]:
+                        # Đếm số vị trí khác nhau trong 5 số cuối
+                        diff_count = 0
+                        for i in range(1, 6):
+                            if ticket_number[i] != win_num[i]:
+                                diff_count += 1
+                        
+                        if diff_count == 1:
+                            win_details.append({"name": "Giải Khuyến Khích", "value": PRIZE_VALUES.get("Giải Khuyến Khích", 0)})
     
     return win_details

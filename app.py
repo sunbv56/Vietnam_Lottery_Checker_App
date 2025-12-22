@@ -46,6 +46,7 @@ def check_ticket():
             
         # Scrape results
         results = crawl_kqxs_final(province_slug, date)
+        # print(results)
         if not results:
             return jsonify({
                 "error": f"Không tìm thấy kết quả cho {province} ngày {date}.",
