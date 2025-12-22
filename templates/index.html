@@ -67,12 +67,37 @@
                 transform: rotate(360deg);
             }
         }
+
+        /* Modal Settings */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 400px;
+        }
     </style>
 </head>
 
 <body class="p-4 md:p-8">
     <div class="max-w-2xl mx-auto">
-        <header class="text-center mb-8">
+        <header class="text-center mb-8 relative">
+            <button id="open-settings" class="absolute top-0 right-0 text-gray-400 hover:text-white p-2 text-xl">
+                <i class="fas fa-cog"></i>
+            </button>
             <h1 class="text-4xl font-bold gradient-text mb-2">Check Vé Số AI</h1>
             <p class="text-gray-400">Dò vé số tự động bằng Gemini AI</p>
         </header>
@@ -172,6 +197,41 @@
         <footer class="mt-12 text-center text-gray-500 text-sm">
             Powered by Gemini 2.5 Flash & Minh Ngọc Result Service
         </footer>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content glass rounded-2xl p-6 space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="text-xl font-bold">Cài đặt</h3>
+                <button id="close-settings" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div>
+                <label class="block text-sm text-gray-400 mb-2">Gemini API Key (Tùy chọn)</label>
+                <input type="password" id="api-key-input" placeholder="Nhập API Key của bạn..."
+                    class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-orange-500">
+
+                <div class="mt-4 p-3 bg-red-900/30 border border-red-500/50 rounded-lg space-y-2 text-xs text-left">
+                    <p class="text-red-200 font-bold"><i class="fas fa-exclamation-triangle mr-1"></i> LƯU Ý BẢO MẬT:
+                    </p>
+                    <ul class="list-disc list-inside text-gray-300 space-y-1">
+                        <li>Chỉ nên dùng <span class="text-orange-400">API Key Miễn phí (Free)</span> từ AI Studio.</li>
+                        <li>Khuyên dùng <span class="text-orange-400">Proxy/VPN</span> đổi IP trước khi thay đổi Key
+                            mới.</li>
+                        <li>Key được lưu <span class="text-orange-400">cục bộ</span> trên máy bạn, không lưu trên
+                            Server.</li>
+                        <li>Server xử lý <span class="text-orange-400">stateless</span> (cam kết không ghi log/lưu lại
+                            Key).</li>
+                    </ul>
+                </div>
+            </div>
+            <button id="save-settings"
+                class="w-full bg-orange-600 hover:bg-orange-700 py-2 rounded-lg font-bold transition-all">
+                Lưu cài đặt
+            </button>
+        </div>
     </div>
 
     <script>
@@ -349,11 +409,16 @@
             previewImg.src = dataUrl;
             loading.classList.remove('hidden');
 
+            const apiKey = localStorage.getItem('gemini_api_key');
+
             try {
                 const response = await fetch('/check', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ image: dataUrl })
+                    body: JSON.stringify({
+                        image: dataUrl,
+                        apiKey: apiKey
+                    })
                 });
 
                 const data = await response.json();
@@ -412,6 +477,41 @@
             errorSection.classList.remove('hidden');
             errorMsg.textContent = msg;
         }
+
+        // --- Settings Logic ---
+        const settingsModal = document.getElementById('settings-modal');
+        const openSettings = document.getElementById('open-settings');
+        const closeSettings = document.getElementById('close-settings');
+        const saveSettings = document.getElementById('save-settings');
+        const apiKeyInput = document.getElementById('api-key-input');
+
+        // Load saved key
+        apiKeyInput.value = localStorage.getItem('gemini_api_key') || '';
+
+        openSettings.addEventListener('click', () => {
+            settingsModal.style.display = 'block';
+        });
+
+        closeSettings.addEventListener('click', () => {
+            settingsModal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target === settingsModal) {
+                settingsModal.style.display = 'none';
+            }
+        });
+
+        saveSettings.addEventListener('click', () => {
+            const key = apiKeyInput.value.trim();
+            if (key) {
+                localStorage.setItem('gemini_api_key', key);
+            } else {
+                localStorage.removeItem('gemini_api_key');
+            }
+            settingsModal.style.display = 'none';
+            alert('Đã lưu cài đặt!');
+        });
     </script>
 </body>
 

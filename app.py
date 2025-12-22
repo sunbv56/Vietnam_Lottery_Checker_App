@@ -21,9 +21,10 @@ def check_ticket():
     try:
         # Decode base64 image
         image_data = base64.b64decode(data['image'].split(',')[1])
+        api_key = data.get('apiKey')
         
         # OCR with Gemini
-        info = extract_ticket_info(image_data)
+        info = extract_ticket_info(image_data, api_key=api_key)
         if not info:
             return jsonify({"error": "Không thể nhận diện thông tin từ ảnh. Vui lòng thử lại với ảnh rõ nét hơn."}), 400
         

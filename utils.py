@@ -61,11 +61,19 @@ PRIZE_VALUES = {
     "Giải Khuyến Khích": 6000000
 }
 
-def extract_ticket_info(image_bytes):
+def extract_ticket_info(image_bytes, api_key=None):
     """
     Sử dụng Gemini để trích xuất thông tin Tỉnh, Ngày và Số từ ảnh vé số.
-    Hỗ trợ fallback qua nhiều model nếu bị rate limit hoặc lỗi.
+    --- CHÍNH SÁCH BẢO MẬT ---
+    - api_key được truyền từ client và chỉ tồn tại trong bộ nhớ (RAM) của tiến trình xử lý request.
+    - Server CAM KẾT không ghi log, không lưu trữ (no persistence) API Key của người dùng.
+    - Mỗi request sẽ cấu hình lại genai để đảm bảo tính độc lập (stateless).
     """
+    if api_key:
+        genai.configure(api_key=api_key)
+    else:
+        genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
     img = Image.open(io.BytesIO(image_bytes))
     
     prompt = """
