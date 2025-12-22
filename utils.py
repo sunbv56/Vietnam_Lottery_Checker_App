@@ -27,13 +27,15 @@ PROVINCE_MAP = {
     "bình dương": "binh-duong",
     "trà vinh": "tra-vinh",
     "tp.hcm": "tp-hcm",
+    "hồ chí minh": "tp-hcm",
+    "tp hồ chí minh": "tp-hcm",
+    "thành phố hồ chí minh": "tp-hcm",
     "long an": "long-an",
     "hậu giang": "hau-giang",
     "bình phước": "binh-phuoc",
     "tiền giang": "tien-giang",
     "kiên giang": "kien-giang",
     "đà lạt": "da-lat",
-    # Add more as needed or use a more robust fuzzy matching
 }
 
 # Danh sách các model để fallback (ưu tiên model cao nhất/mới nhất)
@@ -53,6 +55,7 @@ def extract_ticket_info(image_bytes):
     img = Image.open(io.BytesIO(image_bytes))
     
     prompt = """
+    ### Kết quả OCR chỉ trả về JSON ###
     Phân tích ảnh vé số này và trả về thông tin dưới dạng JSON:
     {
         "province": "tên tỉnh/thành phố, ví dụ: Bến Tre",
