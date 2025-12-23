@@ -581,12 +581,49 @@
 
         document.getElementById('capture-btn').addEventListener('click', (e) => {
             e.stopPropagation();
+
+            // 1. Get video natural and display dimensions
+            const vWidth = video.videoWidth;
+            const vHeight = video.videoHeight;
+            const dWidth = video.offsetWidth;
+            const dHeight = video.offsetHeight;
+
+            // 2. Calculate aspect ratios
+            const vRatio = vWidth / vHeight;
+            const dRatio = dWidth / dHeight;
+
+            let sx, sy, sWidth, sHeight;
+
+            // 3. Simulating 'object-cover' cropping math
+            if (vRatio > dRatio) {
+                // Source is wider than display: Height matches, width is cropped from sides
+                sHeight = vHeight;
+                sWidth = vHeight * dRatio;
+                sx = (vWidth - sWidth) / 2;
+                sy = 0;
+            } else {
+                // Source is taller than display: Width matches, height is cropped from top/bottom
+                sWidth = vWidth;
+                sHeight = vWidth / dRatio;
+                sx = 0;
+                sy = (vHeight - sHeight) / 2;
+            }
+
+            // 4. Create canvas with cropped dimensions
             const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
+            canvas.width = sWidth;
+            canvas.height = sHeight;
             const ctx = canvas.getContext('2d');
-            if (isMirrored) { ctx.translate(canvas.width, 0); ctx.scale(-1, 1); }
-            ctx.drawImage(video, 0, 0);
+
+            // 5. Handle mirroring if active
+            if (isMirrored) {
+                ctx.translate(canvas.width, 0);
+                ctx.scale(-1, 1);
+            }
+
+            // 6. Draw the specific visible region (sWidth x sHeight) from (sx, sy)
+            ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, sWidth, sHeight);
+
             const dataUrl = canvas.toDataURL('image/png');
             stopCamera();
             processImage(dataUrl);
