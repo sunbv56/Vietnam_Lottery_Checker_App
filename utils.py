@@ -76,17 +76,29 @@ def extract_ticket_info(image_bytes, api_key=None):
 
     img = Image.open(io.BytesIO(image_bytes))
     
-    prompt = """
-    ### Kết quả OCR chỉ trả về JSON ###
-    Phân tích ảnh vé số này và trả về thông tin dưới dạng JSON:
-    {
-        "province": "tên tỉnh/thành phố, ví dụ: Bến Tre",
+    prompt = f"""
+    Bạn là một chuyên gia về vé số Việt Nam, có khả năng nhận diện chính xác các chi tiết từ ảnh chụp vé số (ngay cả khi ảnh mờ, đổ bóng hoặc nghiêng).
+
+    HÃY THỰC HIỆN CÁC BƯỚC SAU:
+    1. QUAN SÁT TỔNG THỂ: Xác định vị trí Tên Tỉnh, Ngày Mở Thưởng và Dãy Số Dự Thưởng.
+    2. NHẬN DIỆN CHI TIẾT:
+       - Tỉnh/Thành phố: Thường nằm ở cạnh trái, cạnh phải hoặc trên cùng của vé.
+       - Ngày mở thưởng: Tìm các cụm từ như "Ngày", "Mở thưởng", "Vé ngày". Lưu ý định dạng DD-MM-YYYY.
+       - Dãy số: Tìm dãy số in to nhất, đậm nhất (thường là 6 chữ số).
+    3. KIỂM TRA LOGIC: 
+       - Nếu nhận diện là 0 mà có vẻ giống O, hãy ưu tiên là số 0.
+       - Nếu nhận diện là 8 mà mờ, hãy kiểm tra kỹ với B.
+       - Đảm bảo "number" chỉ chứa các chữ số.
+
+    TRẢ VỀ KẾT QUẢ JSON THEO ĐỊNH DẠNG:
+    {{
+        "province": "tên tỉnh/thành phố chuẩn (ví dụ: Bến Tre)",
         "date": "ngày mở thưởng định dạng DD-MM-YYYY",
-        "number": "dãy số dự thưởng, ví dụ: 093558"
-    }
-    Tỉnh nằm trong danh sách sau:
-    {PROVINCE_MAP}
-    Lưu ý: Chỉ trả về JSON, không thêm bất kỳ văn bản giải thích nào. Nếu không chắc chắn, hãy cố gắng đoán dựa trên thông tin rõ nhất.
+        "number": "dãy số dự thưởng (chuỗi số)"
+    }}
+
+    Tỉnh phải thuộc danh sách: {list(PROVINCE_MAP.keys())}
+    Lưu ý: Chỉ trả về JSON duy nhất, không thêm văn bản giải thích.
     """
     
     for model_name in MODELS_TO_TRY:
