@@ -77,39 +77,42 @@ def extract_ticket_info(image_bytes, api_key=None):
     img = Image.open(io.BytesIO(image_bytes))
     
     prompt = f"""
-    ###Lưu ý: Chỉ trả về JSON duy nhất, không thêm văn bản giải thích.###
-    Bạn là một chuyên gia về vé số Việt Nam, có khả năng nhận diện chính xác các chi tiết từ ảnh chụp vé số (ngay cả khi ảnh mờ, đổ bóng hoặc nghiêng).
+    ### QUY TẮC QUAN TRỌNG NHẤT: CHỈ TRẢ VỀ 1 JSON DUY NHẤT CHO 1 TỜ VÉ SỐ RÕ NHẤT ###
+    Bạn là một chuyên gia về vé số Việt Nam. Trong ảnh có thể chứa nhiều tờ vé số. 
+    Hãy bỏ qua tất cả các tờ vé khác, chỉ tập trung vào DUY NHẤT một tờ vé số mà bạn có thể đọc rõ nhất (thường là tờ ở chính giữa, to nhất hoặc không bị bóng đè).
 
-    HÃY THỰC HIỆN CÁC BƯỚC SAU:
-    1. QUAN SÁT TỔNG THỂ: Xác định vị trí Tên Tỉnh, Ngày Mở Thưởng và Dãy Số Dự Thưởng.
-    2. NHẬN DIỆN CHI TIẾT:
-       - Tỉnh/Thành phố: Thường nằm ở cạnh trái, cạnh phải hoặc trên cùng của vé.
-       - Ngày mở thưởng: Tìm các cụm từ như "Ngày", "Mở thưởng", "Vé ngày". Lưu ý định dạng DD-MM-YYYY.
-       - Dãy số: Tìm dãy số in to nhất, đậm nhất (thường là 6 chữ số).
-    3. KIỂM TRA LOGIC: 
-       - Nếu nhận diện là 0 mà có vẻ giống O, hãy ưu tiên là số 0.
-       - Nếu nhận diện là 8 mà mờ, hãy kiểm tra kỹ với B.
-       - Đảm bảo "number" chỉ chứa các chữ số.
+    HÃY THỰC HIỆN CÁC BƯỚC:
+    1. CHỌN VÉ: Xác định tờ vé số rõ nhất trong ảnh.
+    2. TRÍCH XUẤT THÔNG TIN:
+       - province: Tên tỉnh/thành phố (ví dụ: Bến Tre, Vũng Tàu...).
+       - date: Ngày mở thưởng (định dạng DD-MM-YYYY).
+       - number: Dãy số dự thưởng (chuỗi số, thường là 6 chữ số).
+    3. KIỂM TRA LẠI: 
+        - Đảm bảo số và ngày khớp chính xác với những gì in trên tờ vé đó.
+        - Nếu nhận diện là 0 mà có vẻ giống O, hãy ưu tiên là số 0.
+        - Nếu nhận diện là 1 mà có vẻ giống I, hãy ưu tiên là số 1.
+        - Nếu nhận diện là 8 mà có vẻ giống B, hãy ưu tiên là số 8.
+        - Đảm bảo "number" chỉ chứa các chữ số.        
 
-    TRẢ VỀ KẾT QUẢ JSON THEO ĐỊNH DẠNG:
+    ĐỊNH DẠNG TRẢ VỀ (JSON DUY NHẤT):
     {{
-        "province": "tên tỉnh/thành phố chuẩn (ví dụ: Bến Tre)",
+        "province": "tên tỉnh/thành phố chuẩn",
         "date": "ngày mở thưởng định dạng DD-MM-YYYY",
-        "number": "dãy số dự thưởng (chuỗi số)"
+        "number": "dãy số dự thưởng"
     }}
 
     Tỉnh phải thuộc danh sách: {list(PROVINCE_MAP.keys())}
-    ###Lưu ý: Chỉ trả về JSON duy nhất, không thêm văn bản giải thích.###
+    ### CHỈ TRẢ VỀ JSON, KHÔNG GIẢI THÍCH, KHÔNG CHÀO HỎI, KHÔNG CÓ TEXT THỪA ###
     """
     
     for model_name in MODELS_TO_TRY:
         try:
-            print(f"Đang thử trích xuất bằng model: {model_name}...")
+            print(f"Đang thử trích xuất thông tin bằng model: {model_name}...")
             model = genai.GenerativeModel(model_name)
             response = model.generate_content([prompt, img])
             
-            # Simple regex logic to extract JSON from response
-            match = re.search(r'\{.*\}', response.text, re.DOTALL)
+            # Simple regex logic to extract JSON from response (non-greedy to pick the first JSON object)
+            match = re.search(r'\{.*?\}', response.text, re.DOTALL)
             if match:
                 import json
                 info = json.loads(match.group())

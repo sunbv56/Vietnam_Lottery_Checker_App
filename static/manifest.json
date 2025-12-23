@@ -1,6 +1,6 @@
 {
   "name": "LotteryAI - Kiểm Tra Vé Số",
-  "short_name": "LotteryAI",
+  "short_name": "Dò Vé Số AI",
   "description": "Dò vé số thông minh với Gemini 2.5",
   "start_url": "/",
   "display": "standalone",
@@ -8,12 +8,12 @@
   "theme_color": "#ff5e3a",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/2830/2830305.png",
-      "sizes": "192x192",
+      "src": "https://cdn-icons-png.flaticon.com/128/8610/8610944.png",
+      "sizes": "128x128",
       "type": "image/png"
     },
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/2830/2830305.png",
+      "src": "https://cdn-icons-png.flaticon.com/512/8610/8610944.png",
       "sizes": "512x512",
       "type": "image/png"
     }
