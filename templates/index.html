@@ -228,28 +228,46 @@
                         </div>
 
                         <div id="results-data" class="hidden space-y-8">
+                            <div class="flex justify-between items-center mb-2">
+                                <h3 class="text-lg font-bold">Kết quả phân tích</h3>
+                                <button id="edit-toggle-btn" onclick="toggleEditMode()"
+                                    class="text-xs font-bold uppercase text-orange-400 hover:text-orange-300 transition-colors">
+                                    <i class="fas fa-edit mr-1"></i>Chỉnh sửa
+                                </button>
+                            </div>
+
                             <div class="grid grid-cols-2 gap-4">
                                 <div class="premium-glass p-4 rounded-2xl bg-white/[0.02]">
                                     <p class="text-slate-400 text-[10px] uppercase tracking-widest font-bold mb-1">Tỉnh
                                         Thành</p>
-                                    <p id="res-province" class="text-orange-400 font-bold truncate">---</p>
+                                    <p id="res-province" class="text-orange-400 font-bold truncate outline-none">---</p>
                                 </div>
                                 <div class="premium-glass p-4 rounded-2xl bg-white/[0.02]">
                                     <p class="text-slate-400 text-[10px] uppercase tracking-widest font-bold mb-1">Ngày
                                         Mở</p>
-                                    <p id="res-date" class="text-orange-400 font-bold">--/--/----</p>
+                                    <p id="res-date" class="text-orange-400 font-bold outline-none">--/--/----</p>
                                 </div>
                                 <div class="col-span-2 premium-glass p-6 rounded-2xl text-center bg-white/[0.04]">
                                     <p class="text-slate-400 text-[10px] uppercase tracking-widest font-bold mb-2">Số
                                         Của Bạn</p>
-                                    <p id="res-number" class="text-5xl font-black tracking-[0.2em] text-white">------
+                                    <p id="res-number"
+                                        class="text-5xl font-black tracking-[0.2em] text-white outline-none">------
                                     </p>
                                 </div>
                             </div>
 
+                            <div id="recheck-container" class="hidden animate-fade-in">
+                                <button onclick="reCheckManual()"
+                                    class="w-full gradient-bg py-4 rounded-2xl font-bold btn-hover uppercase tracking-widest text-sm shadow-lg shadow-orange-500/20">
+                                    <i class="fas fa-sync-alt mr-2"></i>Lưu & Kiểm tra lại
+                                </button>
+                                <p class="text-center text-[10px] text-slate-500 mt-2 italic">Dữ liệu sẽ được đối chiếu
+                                    lại với nhà đài</p>
+                            </div>
+
                             <div id="win-status"></div>
 
-                            <button onclick="resetUI()"
+                            <button id="scan-new-btn" onclick="resetUI()"
                                 class="w-full bg-white/5 hover:bg-white/10 py-4 rounded-2xl font-bold transition-all border border-white/10 uppercase tracking-widest text-sm">
                                 <i class="fas fa-redo-alt mr-2 opacity-50"></i>Quét vé khác
                             </button>
@@ -353,6 +371,7 @@
         const flipBtn = document.getElementById('flip-camera');
         let isMirrored = false;
         let videoTrack = null;
+        let isEditMode = false;
 
         // --- History Logic ---
         function saveToHistory(data) {
@@ -409,6 +428,81 @@
             if (confirm('Bạn có chắc muốn xóa toàn bộ lịch sử?')) {
                 localStorage.removeItem('lottery_history');
                 renderHistory();
+            }
+        }
+
+        // --- Manual Edit Logic ---
+        function toggleEditMode() {
+            isEditMode = !isEditMode;
+            const fields = ['res-province', 'res-date', 'res-number'];
+            const btn = document.getElementById('edit-toggle-btn');
+            const recheckContainer = document.getElementById('recheck-container');
+            const scanNewBtn = document.getElementById('scan-new-btn');
+
+            fields.forEach(id => {
+                const el = document.getElementById(id);
+                el.contentEditable = isEditMode;
+                if (isEditMode) {
+                    el.classList.add('bg-white/10', 'rounded', 'px-2', 'py-1', 'border', 'border-white/20');
+                } else {
+                    el.classList.remove('bg-white/10', 'rounded', 'px-2', 'py-1', 'border', 'border-white/20');
+                }
+            });
+
+            if (isEditMode) {
+                btn.innerHTML = '<i class="fas fa-times mr-1"></i>Hủy';
+                btn.classList.replace('text-orange-400', 'text-red-400');
+                recheckContainer.classList.remove('hidden');
+                scanNewBtn.classList.add('hidden');
+            } else {
+                btn.innerHTML = '<i class="fas fa-edit mr-1"></i>Chỉnh sửa';
+                btn.classList.replace('text-red-400', 'text-orange-400');
+                recheckContainer.classList.add('hidden');
+                scanNewBtn.classList.remove('hidden');
+            }
+        }
+
+        async function reCheckManual() {
+            const province = document.getElementById('res-province').textContent.trim();
+            const date = document.getElementById('res-date').textContent.trim();
+            const number = document.getElementById('res-number').textContent.trim();
+
+            if (isEditMode) toggleEditMode(); // Turn off edit mode
+
+            resultsData.classList.add('hidden');
+            loading.classList.remove('hidden');
+            document.getElementById('win-status').innerHTML = '';
+
+            const apiKey = localStorage.getItem('gemini_api_key');
+
+            try {
+                const response = await fetch('/check', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        apiKey,
+                        manualInfo: { province, date, number }
+                    })
+                });
+
+                const data = await response.json();
+                loading.classList.add('hidden');
+
+                if (data.success) {
+                    showResults(data);
+                    // We don't necessarily save to history here to avoid duplicates if it was a minor fix, 
+                    // but the user might want the corrected version in history. 
+                    // Let's save it, history logic handles deduplication if needed (by timestamp usually, but here by ID)
+                    saveToHistory(data);
+                } else {
+                    showError(data.error || 'Lỗi xử lý');
+                    // Briefly show results back so user can correct again if needed
+                    resultsData.classList.remove('hidden');
+                }
+            } catch (err) {
+                loading.classList.add('hidden');
+                showError('Kết nối server thất bại: ' + err.message);
+                resultsData.classList.remove('hidden');
             }
         }
 
@@ -524,6 +618,9 @@
         }
 
         function showResults(data) {
+            // Reset edit mode if it was on
+            if (isEditMode) toggleEditMode();
+
             resultsData.classList.remove('hidden');
             document.getElementById('res-province').textContent = data.info.province;
             document.getElementById('res-date').textContent = data.info.date;

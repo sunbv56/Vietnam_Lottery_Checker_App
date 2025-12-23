@@ -15,22 +15,29 @@ def index():
 @app.route('/check', methods=['POST'])
 def check_ticket():
     data = request.json
-    if not data or 'image' not in data:
-        return jsonify({"error": "No image data provided"}), 400
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
     
     try:
-        # Decode base64 image
-        image_data = base64.b64decode(data['image'].split(',')[1])
         api_key = data.get('apiKey')
+        info = None
         
-        # OCR with Gemini
-        info = extract_ticket_info(image_data, api_key=api_key)
+        # Priority 1: Manual Info (User corrected OCR or entered manually)
+        if 'manualInfo' in data:
+            info = data['manualInfo']
+        # Priority 2: Image (Standard OCR flow)
+        elif 'image' in data:
+            image_data = base64.b64decode(data['image'].split(',')[1])
+            info = extract_ticket_info(image_data, api_key=api_key)
+        else:
+            return jsonify({"error": "Vui lòng cung cấp ảnh hoặc thông tin vé số."}), 400
+
         if not info:
-            return jsonify({"error": "Không thể nhận diện thông tin từ ảnh. Vui lòng thử lại với ảnh rõ nét hơn."}), 400
+            return jsonify({"error": "Không thể nhận diện thông tin từ ảnh. Vui lòng thử lại với ảnh rõ nét hơn hoặc nhập thủ công."}), 400
         
-        province = info.get('province', '').lower()
-        date = info.get('date', '')
-        number = info.get('number', '')
+        province = str(info.get('province', '')).lower()
+        date = str(info.get('date', ''))
+        number = str(info.get('number', ''))
         
         # Find province slug
         province_slug = None
