@@ -77,6 +77,7 @@ def extract_ticket_info(image_bytes, api_key=None):
     img = Image.open(io.BytesIO(image_bytes))
     
     prompt = f"""
+    ###Lưu ý: Chỉ trả về JSON duy nhất, không thêm văn bản giải thích.###
     Bạn là một chuyên gia về vé số Việt Nam, có khả năng nhận diện chính xác các chi tiết từ ảnh chụp vé số (ngay cả khi ảnh mờ, đổ bóng hoặc nghiêng).
 
     HÃY THỰC HIỆN CÁC BƯỚC SAU:
@@ -98,7 +99,7 @@ def extract_ticket_info(image_bytes, api_key=None):
     }}
 
     Tỉnh phải thuộc danh sách: {list(PROVINCE_MAP.keys())}
-    Lưu ý: Chỉ trả về JSON duy nhất, không thêm văn bản giải thích.
+    ###Lưu ý: Chỉ trả về JSON duy nhất, không thêm văn bản giải thích.###
     """
     
     for model_name in MODELS_TO_TRY:
