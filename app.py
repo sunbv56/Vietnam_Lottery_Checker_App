@@ -12,6 +12,14 @@ CORS(app)
 def index():
     return render_template('index.html')
 
+@app.route('/manifest.json')
+def manifest():
+    return app.send_static_file('manifest.json')
+
+@app.route('/sw.js')
+def sw():
+    return app.send_static_file('sw.js')
+
 @app.route('/check', methods=['POST'])
 def check_ticket():
     data = request.json

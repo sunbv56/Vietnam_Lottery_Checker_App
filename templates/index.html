@@ -5,6 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kiểm Tra Vé Số Việt Nam - AI Edition</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#ff5e3a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2830/2830305.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -256,6 +261,10 @@
                                 </div>
                             </div>
 
+                            <div id="results-table-container" class="hidden animate-fade-in">
+                                <!-- Results table will be injected here -->
+                            </div>
+
                             <div id="recheck-container" class="hidden animate-fade-in">
                                 <button onclick="reCheckManual()"
                                     class="w-full gradient-bg py-4 rounded-2xl font-bold btn-hover uppercase tracking-widest text-sm shadow-lg shadow-orange-500/20">
@@ -292,8 +301,32 @@
             </main>
         </div>
 
-        <!-- Right Side: History -->
+        <!-- Right Side: History & Stats -->
         <div class="space-y-6 animate-fade-in" style="animation-delay: 0.2s">
+            <!-- Statistics Card -->
+            <div id="stats-container"
+                class="premium-glass rounded-3xl p-6 border-white/10 bg-gradient-to-br from-orange-500/5 to-pink-500/5">
+                <h3 class="text-lg font-bold mb-4 flex items-center">
+                    <i class="fas fa-chart-line mr-2 text-orange-500"></i>Thống kê & Tài chính
+                </h3>
+                <div class="grid grid-cols-1 gap-4">
+                    <div class="flex justify-between items-center p-3 rounded-xl bg-white/5 border border-white/5">
+                        <span class="text-xs text-slate-400 font-bold uppercase tracking-wider">Tổng tiền trúng</span>
+                        <span id="stat-total-win" class="text-xl font-black text-green-400">0đ</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="p-3 rounded-xl bg-white/5 border border-white/5 text-center">
+                            <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Đã quét</p>
+                            <p id="stat-scanned" class="text-xl font-black">0</p>
+                        </div>
+                        <div class="p-3 rounded-xl bg-white/5 border border-white/5 text-center">
+                            <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Số lần trúng</p>
+                            <p id="stat-lucky" class="text-xl font-black text-orange-400">0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="flex items-center justify-between mb-2">
                 <h3 class="text-lg font-bold flex items-center">
                     <i class="fas fa-history mr-2 text-slate-500"></i>Lịch sử quét
@@ -381,12 +414,14 @@
                 timestamp: new Date().toLocaleString('vi-VN'),
                 info: data.info,
                 isWin: data.win_details && data.win_details.length > 0,
-                win_details: data.win_details
+                win_details: data.win_details,
+                results: data.results
             };
             history.unshift(newItem);
             history = history.slice(0, 50); // Keep last 50
             localStorage.setItem('lottery_history', JSON.stringify(history));
             renderHistory();
+            renderStatistics();
         }
 
         function renderHistory() {
@@ -422,12 +457,14 @@
             previewImg.classList.add('hidden'); // Hide preview for history recall
             loading.classList.add('hidden');
             showResults(item);
+            renderResultsTable(item.results);
         }
 
         function clearHistory() {
             if (confirm('Bạn có chắc muốn xóa toàn bộ lịch sử?')) {
                 localStorage.removeItem('lottery_history');
                 renderHistory();
+                renderStatistics();
             }
         }
 
@@ -585,6 +622,7 @@
             resultsData.classList.add('hidden');
             loading.classList.remove('hidden');
             previewImg.classList.remove('hidden');
+            document.getElementById('results-table-container').classList.add('hidden');
         }
 
         async function processImage(dataUrl) {
@@ -626,6 +664,8 @@
             document.getElementById('res-date').textContent = data.info.date;
             document.getElementById('res-number').textContent = data.info.number;
 
+            renderResultsTable(data.results);
+
             const winStatus = document.getElementById('win-status');
             if (data.win_details && data.win_details.length > 0) {
                 let winHtml = '';
@@ -657,6 +697,73 @@
             errorMsg.textContent = msg;
         }
 
+        // --- Statistics Logic ---
+        function renderStatistics() {
+            const history = JSON.parse(localStorage.getItem('lottery_history') || '[]');
+            let totalWin = 0;
+            let luckyCount = 0;
+            const scannedCount = history.length;
+
+            history.forEach(item => {
+                if (item.isWin && item.win_details) {
+                    luckyCount++;
+                    item.win_details.forEach(d => totalWin += d.value);
+                }
+            });
+
+            document.getElementById('stat-total-win').textContent = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(totalWin);
+            document.getElementById('stat-scanned').textContent = scannedCount;
+            document.getElementById('stat-lucky').textContent = luckyCount;
+        }
+
+        function renderResultsTable(results) {
+            const container = document.getElementById('results-table-container');
+            if (!results) {
+                container.classList.add('hidden');
+                return;
+            }
+            container.classList.remove('hidden');
+
+            let tableHtml = `
+                <div class="premium-glass rounded-2xl overflow-hidden bg-white/[0.02] border-white/5">
+                    <table class="w-full text-sm">
+                        <thead class="bg-white/5 text-[10px] uppercase font-bold text-slate-500">
+                            <tr>
+                                <th class="py-3 px-4 text-left">Giải</th>
+                                <th class="py-3 px-4 text-center">Các số trúng</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5">
+            `;
+
+            const prizeOrder = ['Giải Đặc Biệt', 'Giải Nhất', 'Giải Nhì', 'Giải Ba', 'Giải Tư', 'Giải Năm', 'Giải Sáu', 'Giải Bảy', 'Giải Tám'];
+
+            // Map results to sorted entries
+            const sortedEntries = Object.entries(results).sort((a, b) => {
+                const aIdx = prizeOrder.indexOf(a[0]);
+                const bIdx = prizeOrder.indexOf(b[0]);
+                if (aIdx === -1) return 1;
+                if (bIdx === -1) return -1;
+                return aIdx - bIdx;
+            });
+
+            sortedEntries.forEach(([prize, numbers]) => {
+                tableHtml += `
+                    <tr>
+                        <td class="py-3 px-4 font-bold text-slate-400 text-xs">${prize}</td>
+                        <td class="py-3 px-4 text-center font-mono tracking-wider text-orange-200">${Array.isArray(numbers) ? numbers.join(' - ') : numbers}</td>
+                    </tr>
+                `;
+            });
+
+            tableHtml += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            container.innerHTML = tableHtml;
+        }
+
         // --- Settings ---
         const settingsModal = document.getElementById('settings-modal');
         const apiKeyInput = document.getElementById('api-key-input');
@@ -671,8 +778,20 @@
             settingsModal.style.display = 'none';
         });
 
+        // PWA Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').then(reg => {
+                    console.log('SW Registered!', reg);
+                }).catch(err => {
+                    console.log('SW Registration failed!', err);
+                });
+            });
+        }
+
         // Initialize
         renderHistory();
+        renderStatistics();
     </script>
 </body>
 
