@@ -295,57 +295,57 @@
             </header>
 
             <main class="space-y-6">
-                <!-- Action Area -->
-                <div id="drop-zone"
-                    class="premium-glass rounded-3xl p-10 text-center border-2 border-dashed border-white/10 cursor-pointer animate-fade-in"
-                    style="animation-delay: 0.1s">
-                    <div id="upload-ui">
+                <!-- Quick Action Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in" style="animation-delay: 0.1s">
+                    <!-- Camera Card -->
+                    <div id="camera-card"
+                        class="premium-glass rounded-3xl p-8 text-center border-2 border-transparent hover:border-orange-500/50 cursor-pointer transition-all group flex flex-col items-center justify-center min-h-[280px]">
                         <div
-                            class="mb-6 inline-flex w-20 h-20 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500/20 to-pink-500/20 text-orange-500">
+                            class="mb-6 inline-flex w-20 h-20 items-center justify-center rounded-3xl bg-gradient-to-br from-orange-500/20 to-pink-500/20 text-orange-500 group-hover:scale-110 transition-transform duration-300">
+                            <i class="fas fa-camera text-4xl"></i>
+                        </div>
+                        <h2 class="text-xl font-extrabold mb-2">Chụp Ảnh Ngay</h2>
+                        <p class="text-slate-400 text-sm leading-relaxed px-4">Sử dụng camera điện thoại để quét vé số
+                            trực tiếp và nhận kết quả tức thì</p>
+                        <div class="mt-6 flex justify-center">
+                            <button id="open-camera" type="button"
+                                class="gradient-bg px-8 py-3 rounded-2xl font-bold btn-hover flex items-center justify-center shadow-lg shadow-orange-500/20 text-sm uppercase tracking-wider">
+                                <i class="fas fa-video mr-2"></i>Mở Camera
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Upload Card / Dropzone -->
+                    <div id="drop-zone"
+                        class="premium-glass rounded-3xl p-8 text-center border-2 border-dashed border-white/10 hover:border-orange-500/50 cursor-pointer transition-all group flex flex-col items-center justify-center min-h-[280px]">
+                        <div
+                            class="mb-6 inline-flex w-20 h-20 items-center justify-center rounded-3xl bg-white/5 text-slate-400 group-hover:text-orange-400 group-hover:scale-110 transition-all duration-300">
                             <i class="fas fa-cloud-upload-alt text-4xl"></i>
                         </div>
-                        <h2 class="text-xl font-bold mb-2">Quét vé số của bạn</h2>
-                        <p class="text-slate-400 text-sm">Kéo thả ảnh vào vùng này hoặc bấm trực tiếp để tải lên</p>
-                        <p class="text-[11px] text-slate-500 mt-2 mb-8 uppercase tracking-widest font-bold">Hỗ trợ JPG,
-                            PNG, WEBP & HEIC</p>
-
-                        <div class="flex justify-center relative z-20">
-                            <button id="open-camera" type="button"
-                                class="gradient-bg px-10 py-4 rounded-2xl font-bold btn-hover flex items-center justify-center shadow-lg shadow-orange-500/20">
-                                <i class="fas fa-camera mr-2 text-xl"></i>Mở Camera Quét Ngay
-                            </button>
-                        </div>
+                        <h2 class="text-xl font-extrabold mb-2">Tải Ảnh Lên</h2>
+                        <p class="text-slate-400 text-sm leading-relaxed px-4">Kéo thả ảnh vào đây hoặc bấm để chọn tệp
+                            từ thiết bị của bạn</p>
+                        <p class="text-[10px] text-slate-600 mt-4 uppercase tracking-[0.2em] font-bold">Hỗ trợ JPG, PNG,
+                            WEBP & HEIC</p>
                     </div>
 
-                    <div id="camera-ui" class="hidden space-y-6">
-                        <div
-                            class="relative rounded-2xl overflow-hidden bg-black aspect-video max-h-[600px] flex items-center justify-center">
-                            <video id="video" class="w-full h-full object-cover" autoplay playsinline></video>
-                            <div
-                                class="absolute inset-0 border-2 border-orange-500/30 pointer-events-none m-4 md:m-8 rounded-xl flex items-center justify-center">
-                                <div class="w-4/5 h-2/3 border border-orange-500/50 rounded-lg border-dashed"></div>
-                            </div>
-                        </div>
-                        <div class="flex justify-center items-center gap-6">
-                            <button id="toggle-flash"
-                                class="w-12 h-12 rounded-full premium-glass text-white/70 hover:text-white transition-all hidden">
-                                <i class="fas fa-bolt"></i>
-                            </button>
-                            <button id="capture-btn" class="w-20 h-20 rounded-full border-4 border-white/20 p-1 group">
-                                <div
-                                    class="w-full h-full bg-red-500 rounded-full group-hover:scale-95 transition-transform">
-                                </div>
-                            </button>
-                            <button id="close-camera"
-                                class="w-12 h-12 rounded-full premium-glass text-white/70 hover:text-white transition-all">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <input type="file" id="camera-input" class="hidden" accept="image/*" capture>
-                    <input type="file" id="file-input" class="hidden" accept="image/*" multiple>
                 </div>
+
+                <style>
+                    @keyframes scan {
+                        0% {
+                            top: 0%;
+                        }
+
+                        50% {
+                            top: 100%;
+                        }
+
+                        100% {
+                            top: 0%;
+                        }
+                    }
+                </style>
 
                 <!-- Processing & Results -->
                 <div id="processing-view" class="hidden space-y-6 animate-fade-in">
@@ -609,13 +609,76 @@
         </div>
     </div>
 
+    <!-- Camera UI Overlay (Moved here for proper fixed positioning) -->
+    <div id="camera-ui" class="hidden fixed inset-0 z-[100] bg-black flex flex-col animate-fade-in">
+        <!-- Video Container: 70% height -->
+        <div class="relative h-[70vh] flex items-center justify-center bg-black overflow-hidden">
+            <video id="video" class="w-full h-full object-cover" autoplay playsinline></video>
+
+            <!-- Scanning Guide Overlay -->
+            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none p-6">
+                <div class="w-full max-w-md aspect-[3/2] border-2 border-orange-500/50 rounded-3xl relative">
+                    <div
+                        class="absolute -top-1 -left-1 w-10 h-10 border-t-4 border-l-4 border-orange-500 rounded-tl-2xl">
+                    </div>
+                    <div
+                        class="absolute -top-1 -right-1 w-10 h-10 border-t-4 border-r-4 border-orange-500 rounded-tr-2xl">
+                    </div>
+                    <div
+                        class="absolute -bottom-1 -left-1 w-10 h-10 border-b-4 border-l-4 border-orange-500 rounded-bl-2xl">
+                    </div>
+                    <div
+                        class="absolute -bottom-1 -right-1 w-10 h-10 border-b-4 border-r-4 border-orange-500 rounded-br-2xl">
+                    </div>
+
+                    <!-- Scanning Line Animation -->
+                    <div
+                        class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-orange-500 to-transparent shadow-[0_0_20px_rgba(255,94,58,1)] animate-[scan_3s_linear_infinite]">
+                    </div>
+                </div>
+                <p class="text-white font-bold mt-8 tracking-widest uppercase text-[10px] opacity-60">Đặt vé số vào
+                    khung
+                </p>
+            </div>
+        </div>
+
+        <!-- Camera Controls Bar: 30% height -->
+        <div
+            class="h-[30vh] bg-[#0a0b14] border-t border-white/10 flex flex-col justify-center items-center px-6 space-y-8">
+            <div class="flex justify-around items-center w-full max-w-md">
+                <button id="toggle-flash"
+                    class="w-16 h-16 rounded-full bg-white/5 text-white/70 hover:text-white transition-all flex items-center justify-center hover:bg-white/10 hidden">
+                    <i class="fas fa-bolt text-2xl"></i>
+                </button>
+
+                <div class="relative">
+                    <button id="capture-btn"
+                        class="w-28 h-28 rounded-full border-8 border-orange-500/20 p-2 group transition-all hover:border-orange-500/40">
+                        <div
+                            class="w-full h-full bg-white rounded-full group-active:scale-90 transition-transform shadow-xl">
+                        </div>
+                    </button>
+                </div>
+
+                <button id="close-camera"
+                    class="w-16 h-16 rounded-full bg-white/5 text-white/70 hover:text-white transition-all flex items-center justify-center hover:bg-white/10">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-[0.3em]">Hệ thống AI đang sẵn sàng</p>
+        </div>
+    </div>
+
+    <input type="file" id="camera-input" class="hidden" accept="image/*" capture>
+    <input type="file" id="file-input" class="hidden" accept="image/*" multiple>
+
     <script>
         // DOM Elements
+        const actionGrid = document.getElementById('camera-card').parentElement;
         const dropZone = document.getElementById('drop-zone');
         const fileInput = document.getElementById('file-input');
         const video = document.getElementById('video');
         const cameraUI = document.getElementById('camera-ui');
-        const uploadUI = document.getElementById('upload-ui');
         const processingView = document.getElementById('processing-view');
         const cameraInput = document.getElementById('camera-input');
         const previewImg = document.getElementById('preview-img');
@@ -678,7 +741,7 @@
 
         function reShow(item) {
             resetUI();
-            dropZone.classList.add('hidden');
+            actionGrid.classList.add('hidden');
             processingView.classList.remove('hidden');
             previewImg.classList.add('hidden'); // Hide preview for history recall
             loading.classList.add('hidden');
@@ -781,10 +844,12 @@
         }
 
         // --- Camera Logic ---
-        document.getElementById('open-camera').addEventListener('click', async (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
+        const cameraCard = document.getElementById('camera-card');
+        const openCamera = async (e) => {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
 
             // Detect if user is on mobile
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -811,13 +876,16 @@
                         toggleFlashBtn.classList.add('hidden');
                     }
 
-                    uploadUI.classList.add('hidden');
                     cameraUI.classList.remove('hidden');
+                    document.body.style.overflow = 'hidden'; // Prevent scrolling when camera is open
                 } catch (err) {
                     alert('Lỗi camera: ' + err.message);
                 }
             }
-        }, true); // Use capture phase for even more aggressive prevention
+        };
+
+        cameraCard.addEventListener('click', openCamera);
+        document.getElementById('open-camera').addEventListener('click', openCamera);
 
         cameraInput.addEventListener('change', (e) => {
             const files = Array.from(e.target.files);
@@ -849,7 +917,7 @@
             if (video.srcObject) video.srcObject.getTracks().forEach(t => t.stop());
             videoTrack = null;
             cameraUI.classList.add('hidden');
-            uploadUI.classList.remove('hidden');
+            document.body.style.overflow = ''; // Restore scrolling
         }
 
         document.getElementById('capture-btn').addEventListener('click', (e) => {
@@ -904,11 +972,7 @@
         });
 
         // --- File Upload Logic ---
-        dropZone.addEventListener('click', (e) => {
-            // Check if specifically NOT clicking the camera button region
-            if (e.target.closest('#open-camera')) {
-                return;
-            }
+        dropZone.addEventListener('click', () => {
             fileInput.click();
         });
         dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('scale-[1.02]', 'border-orange-500'); });
@@ -941,8 +1005,7 @@
         function resetUI() {
             processingView.classList.add('hidden');
             errorSection.classList.add('hidden');
-            dropZone.classList.remove('hidden');
-            uploadUI.classList.remove('hidden');
+            actionGrid.classList.remove('hidden');
             resultsData.classList.add('hidden');
             loading.classList.remove('hidden');
             previewImg.classList.remove('hidden');
@@ -959,7 +1022,7 @@
             resetUI();
             if (dataUrls.length === 0) return;
 
-            dropZone.classList.add('hidden');
+            actionGrid.classList.add('hidden');
             processingView.classList.remove('hidden');
             previewImg.src = dataUrls[0]; // Preview first image
 
