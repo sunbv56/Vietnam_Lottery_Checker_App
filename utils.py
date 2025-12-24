@@ -151,6 +151,20 @@ def crawl_kqxs_final(province_slug, date_str):
         full_html = "".join(html_chunks).replace("\\'", "'").replace("\\/", "/").replace("\\t", "")
         soup = BeautifulSoup(full_html, 'html.parser')
 
+        # --- Check if result is actually for the requested date ---
+        # The user's logic: find select#box_kqxs_ngay and check its selected option's value
+        try:
+            date_select = soup.find('select', id='box_kqxs_ngay')
+            if date_select:
+                selected_option = date_select.find('option', selected=True)
+                if selected_option:
+                    actual_date = selected_option.get('value')
+                    if actual_date != date_str:
+                        print(f"Kết quả cho ngày {date_str} chưa có (đang hiển thị ngày {actual_date})")
+                        return "NOT_READY"
+        except Exception as e:
+            print(f"Lỗi khi kiểm tra tính khả dụng của kết quả: {e}")
+
         giai_db_node = soup.find('td', class_='giaidb')
         if not giai_db_node:
             return None

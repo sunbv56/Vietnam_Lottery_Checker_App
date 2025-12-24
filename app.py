@@ -62,7 +62,17 @@ def check_ticket():
             
         # Scrape results
         results = crawl_kqxs_final(province_slug, date)
-        # print(results)
+        
+        if results == "NOT_READY":
+            message = f"Đài {province.title()} ngày {date} hiện chưa có kết quả chính thức. Vui lòng quay lại sau nhé!"
+            return jsonify({
+                "success": False,
+                "status": "NOT_READY",
+                "message": message,
+                "error": message,  # Fallback for generic error handlers
+                "info": info
+            }), 202
+            
         if not results:
             return jsonify({
                 "error": f"Không tìm thấy kết quả cho {province} ngày {date}.",

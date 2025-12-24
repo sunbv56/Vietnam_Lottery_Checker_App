@@ -345,19 +345,29 @@
                     </div>
                 </div>
 
-                <!-- Error View -->
+                <!-- Error & Pending View -->
                 <div id="error-section"
-                    class="hidden premium-glass border-red-500/30 rounded-3xl p-8 text-center animate-fade-in">
-                    <div
+                    class="hidden premium-glass border-red-500/30 rounded-3xl p-8 text-center animate-fade-in shadow-2xl">
+                    <!-- Error Icon -->
+                    <div id="error-icon"
                         class="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
                         <i class="fas fa-exclamation-triangle text-2xl"></i>
                     </div>
-                    <h3 class="text-xl font-bold mb-2">Oops! Có lỗi rồi</h3>
-                    <p id="error-msg" class="text-slate-400 text-sm mb-6"></p>
-                    <button onclick="resetUI()"
-                        class="px-8 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-all font-bold">
-                        Thử lại
-                    </button>
+                    <!-- Pending Icon -->
+                    <div id="pending-icon"
+                        class="hidden w-16 h-16 bg-orange-500/10 text-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-clock text-2xl"></i>
+                    </div>
+
+                    <h3 id="error-title" class="text-xl font-bold mb-2">Oops! Có lỗi rồi</h3>
+                    <p id="error-msg" class="text-slate-400 text-sm mb-6 leading-relaxed"></p>
+
+                    <div class="flex justify-center">
+                        <button id="error-action-btn" onclick="resetUI()"
+                            class="px-10 py-3 bg-red-500/20 text-red-400 rounded-2xl hover:bg-red-500/30 transition-all font-bold min-w-[150px]">
+                            Thử lại
+                        </button>
+                    </div>
                 </div>
             </main>
         </div>
@@ -664,6 +674,13 @@
                     })
                 });
 
+                if (response.status === 202) {
+                    const data = await response.json();
+                    loading.classList.add('hidden');
+                    showPendingMessage(data.message);
+                    return;
+                }
+
                 const data = await response.json();
                 loading.classList.add('hidden');
 
@@ -821,6 +838,13 @@
                     body: JSON.stringify({ image: dataUrl, apiKey })
                 });
 
+                if (response.status === 202) {
+                    const data = await response.json();
+                    loading.classList.add('hidden');
+                    showPendingMessage(data.message);
+                    return;
+                }
+
                 const data = await response.json();
                 loading.classList.add('hidden');
 
@@ -950,8 +974,41 @@
         }
 
         function showError(msg) {
+            processingView.classList.add('hidden');
             errorSection.classList.remove('hidden');
+
+            // Set UI to Error state
+            errorSection.className = 'premium-glass border-red-500/30 rounded-3xl p-8 text-center animate-fade-in shadow-2xl';
+            document.getElementById('error-icon').classList.remove('hidden');
+            document.getElementById('pending-icon').classList.add('hidden');
+
+            document.getElementById('error-title').textContent = 'Oops! Có lỗi rồi';
+            errorMsg.textContent = msg || 'Lỗi không xác định';
+
+            const btn = document.getElementById('error-action-btn');
+            if (btn) {
+                btn.textContent = 'Thử lại';
+                btn.className = 'px-10 py-3 bg-red-500/20 text-red-400 rounded-2xl hover:bg-red-500/30 transition-all font-bold min-w-[150px]';
+            }
+        }
+
+        function showPendingMessage(msg) {
+            processingView.classList.add('hidden');
+            errorSection.classList.remove('hidden');
+
+            // Set UI to Pending state
+            errorSection.className = 'premium-glass border-orange-500/30 rounded-3xl p-8 text-center animate-fade-in shadow-2xl';
+            document.getElementById('error-icon').classList.add('hidden');
+            document.getElementById('pending-icon').classList.remove('hidden');
+
+            document.getElementById('error-title').textContent = 'Kết quả đang chờ';
             errorMsg.textContent = msg;
+
+            const btn = document.getElementById('error-action-btn');
+            if (btn) {
+                btn.textContent = 'Quay lại';
+                btn.className = 'px-10 py-3 bg-orange-500/20 text-orange-400 rounded-2xl hover:bg-orange-500/30 transition-all font-bold min-w-[150px]';
+            }
         }
 
         // --- Statistics Logic ---
