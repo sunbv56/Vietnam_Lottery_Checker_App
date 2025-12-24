@@ -17,11 +17,30 @@
 
         :root {
             --bg-dark: #0a0b14;
+            --bg-light: #f8fafc;
             --accent-primary: #ff5e3a;
             --accent-secondary: #ff2a6d;
             --glass-bg: rgba(255, 255, 255, 0.03);
             --glass-border: rgba(255, 255, 255, 0.08);
+            --text-dark: #ffffff;
+            --text-light: #0f172a;
             --text-muted: #94a3b8;
+        }
+
+        @media (prefers-color-scheme: light) {
+            :root {
+                --bg-dark: var(--bg-light);
+                --glass-bg: rgba(0, 0, 0, 0.03);
+                --glass-border: rgba(0, 0, 0, 0.08);
+                --text-dark: var(--text-light);
+                --text-muted: #64748b;
+            }
+
+            body {
+                background-image:
+                    radial-gradient(circle at 10% 20%, rgba(255, 94, 58, 0.1) 0%, transparent 40%),
+                    radial-gradient(circle at 90% 80%, rgba(255, 42, 109, 0.1) 0%, transparent 40%) !important;
+            }
         }
 
         body {
@@ -31,8 +50,9 @@
                 radial-gradient(circle at 10% 20%, rgba(255, 94, 58, 0.05) 0%, transparent 40%),
                 radial-gradient(circle at 90% 80%, rgba(255, 42, 109, 0.05) 0%, transparent 40%);
             min-height: 100vh;
-            color: white;
+            color: var(--text-dark);
             overflow-x: hidden;
+            transition: background-color 0.5s ease, color 0.5s ease;
         }
 
         .premium-glass {
@@ -279,7 +299,7 @@
                         </div>
                     </div>
 
-                    <input type="file" id="file-input" class="hidden" accept="image/*">
+                    <input type="file" id="file-input" class="hidden" accept="image/*" multiple>
                 </div>
 
                 <!-- Processing & Results -->
@@ -530,8 +550,13 @@
 
             <div class="mt-12 flex gap-4">
                 <button id="close-results-btn"
-                    class="flex-grow gradient-bg py-5 rounded-[1.5rem] font-bold btn-hover uppercase tracking-widest text-sm shadow-xl shadow-orange-500/20 flex items-center justify-center gap-2">
+                    class="flex-grow bg-white/10 py-5 rounded-[1.5rem] font-bold hover:bg-white/20 transition-all uppercase tracking-widest text-sm border border-white/10">
                     <span>Đã hiểu</span>
+                </button>
+                <button id="share-win-btn" onclick="downloadWinImage()"
+                    class="flex-grow gradient-bg py-5 rounded-[1.5rem] font-bold btn-hover uppercase tracking-widest text-sm shadow-xl shadow-orange-500/20 flex items-center justify-center gap-2 hidden">
+                    <i class="fas fa-share-alt"></i>
+                    <span>Chia sẻ</span>
                 </button>
             </div>
         </div>
@@ -567,8 +592,8 @@
                 timestamp: new Date().toLocaleString('vi-VN'),
                 info: data.info,
                 isWin: data.win_details && data.win_details.length > 0,
-                win_details: data.win_details,
-                results: data.results
+                win_details: data.win_details
+                // results: data.results <-- Removed to save space
             };
             history.unshift(newItem);
             history = history.slice(0, 50); // Keep last 50
@@ -609,7 +634,12 @@
             processingView.classList.remove('hidden');
             previewImg.classList.add('hidden'); // Hide preview for history recall
             loading.classList.add('hidden');
-            showResults(item);
+
+            // Set as current batch of 1 for navigation/history context
+            currentBatch = [item];
+            currentIndex = 0;
+
+            showResults(item, true); // Force auto-open modal for history
         }
 
         function clearHistory() {
@@ -784,8 +814,9 @@
             ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, sWidth, sHeight);
 
             const dataUrl = canvas.toDataURL('image/png');
+            playSound('shutter');
             stopCamera();
-            processImage(dataUrl);
+            processImages([dataUrl]);
         });
 
         // --- File Upload Logic ---
@@ -795,19 +826,26 @@
         dropZone.addEventListener('drop', (e) => {
             e.preventDefault();
             dropZone.classList.remove('scale-[1.02]', 'border-orange-500');
-            const file = e.dataTransfer.files[0];
-            if (file?.type.startsWith('image/')) handleFile(file);
+            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+            if (files.length > 0) handleFiles(files);
         });
 
         fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) handleFile(file);
+            const files = Array.from(e.target.files);
+            if (files.length > 0) handleFiles(files);
         });
 
-        function handleFile(file) {
-            const reader = new FileReader();
-            reader.onload = (e) => processImage(e.target.result);
-            reader.readAsDataURL(file);
+        async function handleFiles(files) {
+            const dataUrls = [];
+            for (const file of files) {
+                const url = await new Promise(resolve => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.readAsDataURL(file);
+                });
+                dataUrls.push(url);
+            }
+            processImages(dataUrls);
         }
 
         function resetUI() {
@@ -823,48 +861,130 @@
             fileInput.value = ''; // Fix: allow re-uploading same file after error
         }
 
-        async function processImage(dataUrl) {
+        let currentBatch = [];
+        let currentIndex = 0;
+
+        async function processImages(dataUrls) {
             resetUI();
+            if (dataUrls.length === 0) return;
+
             dropZone.classList.add('hidden');
             processingView.classList.remove('hidden');
-            previewImg.src = dataUrl;
+            previewImg.src = dataUrls[0]; // Preview first image
 
             const apiKey = localStorage.getItem('gemini_api_key');
+            currentBatch = [];
+            currentIndex = 0;
 
-            try {
-                const response = await fetch('/check', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ image: dataUrl, apiKey })
-                });
+            for (let i = 0; i < dataUrls.length; i++) {
+                if (dataUrls.length > 1) {
+                    loading.querySelector('p').textContent = `Đang xử lý ảnh ${i + 1}/${dataUrls.length}...`;
+                    previewImg.src = dataUrls[i]; // Update preview as we go
+                }
 
-                if (response.status === 202) {
+                try {
+                    const response = await fetch('/check', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ image: dataUrls[i], apiKey })
+                    });
+
                     const data = await response.json();
-                    loading.classList.add('hidden');
-                    showPendingMessage(data.message);
-                    return;
-                }
 
-                const data = await response.json();
-                loading.classList.add('hidden');
+                    if (data.results && Array.isArray(data.results)) {
+                        // Combine results from this image into our total batch
+                        currentBatch = currentBatch.concat(data.results);
 
-                if (data.success) {
-                    showResults(data);
-                    saveToHistory(data);
-                } else {
-                    showError(data.error || 'Lỗi xử lý AI');
+                        // Save each to history
+                        data.results.forEach(res => {
+                            if (res.status === 'OK' || res.status === 'NOT_READY') {
+                                saveToHistory(res);
+                            }
+                        });
+                    }
+                } catch (err) {
+                    console.error("Lỗi xử lý ảnh:", err);
                 }
-            } catch (err) {
-                loading.classList.add('hidden');
-                showError('Kết nối server thất bại: ' + err.message);
+            }
+
+            loading.classList.add('hidden');
+            loading.querySelector('p').textContent = 'Gemini AI đang nhận diện số và tỉnh thành'; // Reset text
+
+            if (currentBatch.length > 0) {
+                showBatchResults();
+            } else {
+                showError('Không nhận diện được vé số nào từ các ảnh đã chọn.');
             }
         }
 
-        function showResults(data) {
+        function showBatchResults() {
+            if (!currentBatch || currentBatch.length === 0) return;
+
+            const data = currentBatch[currentIndex];
+
+            // Handle different statuses
+            if (data.status === 'NOT_READY') {
+                showPendingMessage(data.message);
+            } else if (data.status === 'ERROR') {
+                showError(data.message || 'Lỗi xử lý vé này');
+            } else {
+                showResults(data, false); // No auto-open in batch mode
+            }
+
+            // Update navigation UI
+            renderNavigation();
+        }
+
+        function renderNavigation() {
+            let navContainer = document.getElementById('batch-nav');
+            if (!navContainer) {
+                navContainer = document.createElement('div');
+                navContainer.id = 'batch-nav';
+                navContainer.className = 'flex justify-center items-center gap-4 mt-6';
+                resultsData.parentNode.insertBefore(navContainer, resultsData);
+            }
+
+            if (currentBatch.length <= 1) {
+                navContainer.classList.add('hidden');
+                return;
+            }
+
+            navContainer.classList.remove('hidden');
+            navContainer.innerHTML = `
+                <button onclick="prevTicket()" class="w-10 h-10 rounded-full premium-glass flex items-center justify-center text-slate-400 hover:text-white transition-all ${currentIndex === 0 ? 'opacity-30 pointer-events-none' : ''}">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <div class="flex gap-2">
+                    ${currentBatch.map((_, i) => `<div class="w-2 h-2 rounded-full transition-all ${i === currentIndex ? 'bg-orange-500 w-6' : 'bg-white/20'}"></div>`).join('')}
+                </div>
+                <button onclick="nextTicket()" class="w-10 h-10 rounded-full premium-glass flex items-center justify-center text-slate-400 hover:text-white transition-all ${currentIndex === currentBatch.length - 1 ? 'opacity-30 pointer-events-none' : ''}">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            `;
+        }
+
+        function nextTicket() {
+            if (currentIndex < currentBatch.length - 1) {
+                currentIndex++;
+                showBatchResults();
+            }
+        }
+
+        function prevTicket() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                showBatchResults();
+            }
+        }
+
+        function showResults(data, autoOpen = false) {
             // Reset edit mode if it was on
             if (isEditMode) toggleEditMode();
 
+            // Clear any previous error/pending state if we are showing a success result
+            errorSection.classList.add('hidden');
             resultsData.classList.remove('hidden');
+
             // Main UI
             document.getElementById('res-province').textContent = data.info.province;
             document.getElementById('res-date').textContent = data.info.date;
@@ -889,6 +1009,9 @@
             if (isWin) {
                 modalWinContainer.classList.remove('hidden');
                 modalLoseContainer.classList.add('hidden');
+                document.getElementById('share-win-btn').classList.remove('hidden');
+
+                const maxPrize = Math.max(...data.win_details.map(d => d.value));
 
                 data.win_details.forEach(detail => {
                     const val = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(detail.value);
@@ -917,9 +1040,15 @@
                 });
                 modalPrizeDisplay.innerHTML = modalPrizeHtml;
                 startConfetti();
+
+                // Enhanced Sound & Haptic based on prize
+                if (maxPrize >= 10000000) playSound('big_win');
+                else playSound('small_win');
+
             } else {
                 modalWinContainer.classList.add('hidden');
                 modalLoseContainer.classList.remove('hidden');
+                document.getElementById('share-win-btn').classList.add('hidden');
 
                 winHtml = `
                     <div class="premium-glass p-6 rounded-2xl text-center border-white/5 bg-white/[0.02]">
@@ -927,12 +1056,15 @@
                         <p class="font-bold text-slate-400">Không trúng giải - Chúc bạn may mắn lần sau!</p>
                     </div>
                 `;
+                playSound('no_win');
             }
 
             winStatus.innerHTML = winHtml;
 
-            // Open Modal
-            resultsModal.style.display = 'flex';
+            // Only auto-open modal if explicitly requested (history) or ONLY one ticket in batch
+            if (autoOpen || (currentBatch && currentBatch.length === 1)) {
+                resultsModal.style.display = 'flex';
+            }
         }
 
         // Simple Confetti
@@ -971,6 +1103,128 @@
                 if (resultsModal.style.display === 'flex') requestAnimationFrame(draw);
             }
             draw();
+        }
+
+        let audioCtx;
+
+        function playSound(type) {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+
+                const playNote = (freq, start, duration, vol = 0.1, wave = 'sine') => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = wave;
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.frequency.setValueAtTime(freq, start);
+                    gain.gain.setValueAtTime(0, start);
+                    gain.gain.linearRampToValueAtTime(vol, start + 0.05);
+                    gain.gain.exponentialRampToValueAtTime(0.01, start + duration);
+                    osc.start(start);
+                    osc.stop(start + duration);
+                };
+
+                const now = audioCtx.currentTime;
+
+                switch (type) {
+                    case 'small_win':
+                        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+                        playNote(523.25, now, 0.4, 0.1, 'triangle'); // C5
+                        playNote(659.25, now + 0.1, 0.4, 0.1, 'triangle'); // E5
+                        playNote(783.99, now + 0.2, 0.4, 0.1, 'triangle'); // G5
+                        playNote(1046.50, now + 0.3, 0.6, 0.15, 'sine'); // C6
+                        break;
+                    case 'big_win':
+                        if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 500]);
+                        // Fanfare chords
+                        [523.25, 659.25, 783.99].forEach(f => playNote(f, now, 0.8, 0.1, 'square'));
+                        [659.25, 830.61, 1046.50].forEach(f => playNote(f, now + 0.3, 0.8, 0.1, 'square'));
+                        [783.99, 987.77, 1318.51].forEach(f => playNote(f, now + 0.6, 1.2, 0.2, 'sine'));
+                        break;
+                    case 'no_win':
+                        playNote(392.00, now, 0.15, 0.05, 'sine'); // G4
+                        playNote(329.63, now + 0.1, 0.2, 0.05, 'sine'); // E4
+                        break;
+                    case 'shutter':
+                        // Noise-like sound for shutter
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'square';
+                        osc.frequency.setValueAtTime(1000, now);
+                        osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+                        gain.gain.setValueAtTime(0.2, now);
+                        gain.gain.linearRampToValueAtTime(0, now + 0.1);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start(now);
+                        osc.stop(now + 0.1);
+                        break;
+                }
+            } catch (e) {
+                console.log('Audio Error:', e);
+            }
+        }
+
+        async function downloadWinImage() {
+            const data = currentBatch[currentIndex];
+            if (!data || !data.win_details || data.win_details.length === 0) return;
+
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 1200;
+            canvas.height = 630;
+
+            // Background Gradient
+            const grad = ctx.createLinearGradient(0, 0, 1200, 630);
+            grad.addColorStop(0, '#0a0b14');
+            grad.addColorStop(1, '#1e293b');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 1200, 630);
+
+            // Accents
+            ctx.fillStyle = 'rgba(255, 94, 58, 0.1)';
+            ctx.beginPath();
+            ctx.arc(0, 0, 400, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Text Styles
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#ffffff';
+
+            // App Title
+            ctx.font = '800 40px Outfit, sans-serif';
+            ctx.fillText('LOTTERY AI', 600, 80);
+
+            // Trophy Icon (Simple drawing or just text if icon is hard)
+            ctx.font = '100px serif';
+            ctx.fillText('🏆', 600, 200);
+
+            ctx.font = '900 80px Outfit, sans-serif';
+            ctx.fillStyle = '#ff5e3a';
+            ctx.fillText('CHÚC MỪNG BẠN!', 600, 300);
+
+            const detail = data.win_details[0]; // Share the first/highest prize
+            const val = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(detail.value);
+
+            ctx.font = '600 30px Outfit, sans-serif';
+            ctx.fillStyle = '#94a3b8';
+            ctx.fillText(`CÁC SỐ TRÚNG GIẢI: ${detail.name.toUpperCase()}`, 600, 380);
+
+            ctx.font = '900 120px Outfit, sans-serif';
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(val, 600, 520);
+
+            ctx.font = '400 24px Outfit, sans-serif';
+            ctx.fillStyle = '#64748b';
+            ctx.fillText(`Vé: ${data.info.number} - Đài ${data.info.province} - Ngày ${data.info.date}`, 600, 580);
+
+            // Trigger Download
+            const link = document.createElement('a');
+            link.download = `LotteryAI_Win_${data.info.number}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
         }
 
         function showError(msg) {

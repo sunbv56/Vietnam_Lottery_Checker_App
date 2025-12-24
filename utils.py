@@ -77,32 +77,37 @@ def extract_ticket_info(image_bytes, api_key=None):
     img = Image.open(io.BytesIO(image_bytes))
     
     prompt = f"""
-    ### QUY TẮC QUAN TRỌNG NHẤT: CHỈ TRẢ VỀ 1 JSON DUY NHẤT CHO 1 TỜ VÉ SỐ RÕ NHẤT ###
-    Bạn là một chuyên gia về vé số Việt Nam. Trong ảnh có thể chứa nhiều tờ vé số. 
-    Hãy bỏ qua tất cả các tờ vé khác, chỉ tập trung vào DUY NHẤT một tờ vé số mà bạn có thể đọc rõ nhất (thường là tờ ở chính giữa, to nhất hoặc không bị bóng đè).
-
+    ### QUY TẮC QUAN TRỌNG: TRÍCH XUẤT TỐI ĐA 3 TỜ VÉ SỐ ###
+    Bạn là một chuyên gia về vé số Việt Nam. Hãy quan sát ảnh và tìm tất cả các tờ vé số có trong ảnh.
+    
     HÃY THỰC HIỆN CÁC BƯỚC:
-    1. CHỌN VÉ: Xác định tờ vé số rõ nhất trong ảnh.
-    2. TRÍCH XUẤT THÔNG TIN:
+    1. NHẬN DIỆN: Tìm tối đa 3 tờ vé số rõ nhất trong ảnh.
+    2. TRÍCH XUẤT THÔNG TIN cho TỪNG tờ vé:
        - province: Tên tỉnh/thành phố (ví dụ: Bến Tre, Vũng Tàu...).
        - date: Ngày mở thưởng (định dạng DD-MM-YYYY).
        - number: Dãy số dự thưởng (chuỗi số, thường là 6 chữ số).
-    3. KIỂM TRA LẠI: 
-        - Đảm bảo số và ngày khớp chính xác với những gì in trên tờ vé đó.
-        - Nếu nhận diện là 0 mà có vẻ giống O, hãy ưu tiên là số 0.
-        - Nếu nhận diện là 1 mà có vẻ giống I, hãy ưu tiên là số 1.
-        - Nếu nhận diện là 8 mà có vẻ giống B, hãy ưu tiên là số 8.
-        - Đảm bảo "number" chỉ chứa các chữ số.        
+    3. ĐỊNH DẠNG TRẢ VỀ: Một MẢNG các đối tượng JSON.
 
-    ĐỊNH DẠNG TRẢ VỀ (JSON DUY NHẤT):
-    {{
-        "province": "tên tỉnh/thành phố chuẩn",
-        "date": "ngày mở thưởng định dạng DD-MM-YYYY",
-        "number": "dãy số dự thưởng"
-    }}
+    ĐỊNH DẠNG TRẢ VỀ MẪU:
+    [
+      {{
+          "province": "Bến Tre",
+          "date": "24-12-2025",
+          "number": "123456"
+      }},
+      {{
+          "province": "Vũng Tàu",
+          "date": "24-12-2025",
+          "number": "654321"
+      }}
+    ]
 
     Tỉnh phải thuộc danh sách: {list(PROVINCE_MAP.keys())}
-    ### CHỈ TRẢ VỀ JSON, KHÔNG GIẢI THÍCH, KHÔNG CHÀO HỎI, KHÔNG CÓ TEXT THỪA ###
+    - Nếu chỉ thấy 1 vé, trả về mảng có 1 phần tử.
+    - Nếu không thấy vé nào, trả về mảng rỗng [].
+    - Đảm bảo "number" chỉ chứa các chữ số.
+    
+    ### CHỈ TRẢ VỀ JSON ARRAY, KHÔNG GIẢI THÍCH, KHÔNG TEXT THỪA ###
     """
     
     for model_name in MODELS_TO_TRY:
@@ -111,22 +116,31 @@ def extract_ticket_info(image_bytes, api_key=None):
             model = genai.GenerativeModel(model_name)
             response = model.generate_content([prompt, img])
             
-            # Simple regex logic to extract JSON from response (non-greedy to pick the first JSON object)
-            match = re.search(r'\{.*?\}', response.text, re.DOTALL)
+            # Extract JSON Array using regex
+            match = re.search(r'\[.*\]', response.text, re.DOTALL)
             if match:
                 import json
-                info = json.loads(match.group())
-                # Kiểm tra sơ bộ data có hợp lệ không (ít nhất phải có number)
-                if info.get('number'):
-                    print(f"Thành công với model: {model_name}")
-                    return info
+                tickets = json.loads(match.group())
+                if isinstance(tickets, list) and len(tickets) > 0:
+                    print(f"Thành công với model: {model_name}. Tìm thấy {len(tickets)} vé.")
+                    return tickets
+                elif isinstance(tickets, dict): # Fallback for single object
+                    return [tickets]
             
+            # Second attempt if no array found but maybe a single object
+            match_obj = re.search(r'\{.*?\}', response.text, re.DOTALL)
+            if match_obj:
+                import json
+                info = json.loads(match_obj.group())
+                if info.get('number'):
+                    return [info]
+                    
             print(f"Model {model_name} trả về kết quả không hợp lệ, thử model tiếp theo...")
         except Exception as e:
             print(f"Lỗi khi sử dụng model {model_name}: {str(e)}")
-            continue # Thử model tiếp theo
+            continue
             
-    return None
+    return []
 
 def crawl_kqxs_final(province_slug, date_str):
     """
