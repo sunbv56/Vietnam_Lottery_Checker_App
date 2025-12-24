@@ -343,8 +343,6 @@
                         </div>
                     </div>
 
-                    <input type="file" id="camera-input" class="hidden" accept="image/*" capture>
-                    <input type="file" id="file-input" class="hidden" accept="image/*" multiple>
                 </div>
 
                 <!-- Processing & Results -->
@@ -780,8 +778,8 @@
             }
         }
 
-        // --- Camera Logic ---
         document.getElementById('open-camera').addEventListener('click', async (e) => {
+            e.preventDefault();
             e.stopPropagation();
 
             // Detect if user is on mobile
@@ -903,8 +901,10 @@
 
         // --- File Upload Logic ---
         dropZone.addEventListener('click', (e) => {
-            // If click is on a button or inside a button, don't trigger file library
+            // Prevent if click was on the camera button or other components
             if (e.target.closest('button')) return;
+
+            e.preventDefault();
             fileInput.click();
         });
         dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('scale-[1.02]', 'border-orange-500'); });
@@ -1456,6 +1456,10 @@
         renderHistory();
         renderStatistics();
     </script>
+    <!-- Hidden Inputs for File/Camera -->
+    <input type="file" id="camera-input" class="hidden" accept="image/*" capture>
+    <input type="file" id="file-input" class="hidden" accept="image/*" multiple>
+
 </body>
 
 </html>
