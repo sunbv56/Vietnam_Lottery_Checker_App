@@ -343,6 +343,7 @@
                         </div>
                     </div>
 
+                    <input type="file" id="camera-input" class="hidden" accept="image/*" capture="environment">
                     <input type="file" id="file-input" class="hidden" accept="image/*" multiple>
                 </div>
 
@@ -616,6 +617,7 @@
         const cameraUI = document.getElementById('camera-ui');
         const uploadUI = document.getElementById('upload-ui');
         const processingView = document.getElementById('processing-view');
+        const cameraInput = document.getElementById('camera-input');
         const previewImg = document.getElementById('preview-img');
         const loading = document.getElementById('loading');
         const resultsData = document.getElementById('results-data');
@@ -781,28 +783,43 @@
         // --- Camera Logic ---
         document.getElementById('open-camera').addEventListener('click', async (e) => {
             e.stopPropagation();
-            if (!navigator.mediaDevices?.getUserMedia) return alert('Trình duyệt không hỗ trợ camera');
 
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
-                });
-                video.srcObject = stream;
-                videoTrack = stream.getVideoTracks()[0];
+            // Detect if user is on mobile
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-                // Check if flash/torch is supported
-                const capabilities = videoTrack.getCapabilities();
-                if (capabilities.torch) {
-                    toggleFlashBtn.classList.remove('hidden');
-                } else {
-                    toggleFlashBtn.classList.add('hidden');
+            if (isMobile) {
+                // Open native camera app on mobile
+                cameraInput.click();
+            } else {
+                // Open custom camera UI on Desktop
+                if (!navigator.mediaDevices?.getUserMedia) return alert('Trình duyệt không hỗ trợ camera');
+
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+                    });
+                    video.srcObject = stream;
+                    videoTrack = stream.getVideoTracks()[0];
+
+                    // Check if flash/torch is supported
+                    const capabilities = videoTrack.getCapabilities();
+                    if (capabilities.torch) {
+                        toggleFlashBtn.classList.remove('hidden');
+                    } else {
+                        toggleFlashBtn.classList.add('hidden');
+                    }
+
+                    uploadUI.classList.add('hidden');
+                    cameraUI.classList.remove('hidden');
+                } catch (err) {
+                    alert('Lỗi camera: ' + err.message);
                 }
-
-                uploadUI.classList.add('hidden');
-                cameraUI.classList.remove('hidden');
-            } catch (err) {
-                alert('Lỗi camera: ' + err.message);
             }
+        });
+
+        cameraInput.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            if (files.length > 0) handleFiles(files);
         });
 
         document.getElementById('close-camera').addEventListener('click', (e) => {
