@@ -803,6 +803,7 @@
             previewImg.classList.remove('hidden');
             document.getElementById('results-table-container').classList.add('hidden');
             resultsModal.style.display = 'none';
+            fileInput.value = ''; // Fix: allow re-uploading same file after error
         }
 
         async function processImage(dataUrl) {
