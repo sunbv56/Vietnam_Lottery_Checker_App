@@ -76,24 +76,16 @@ def extract_ticket_info(image_bytes, api_key=None):
 
     img = Image.open(io.BytesIO(image_bytes))
     
-    safety_settings = [
-        {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
-        {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
-        {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
-        {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
-    ]
-    
     prompt = f"""
     ### QUY TẮC QUAN TRỌNG: TRÍCH XUẤT TỐI ĐA 3 TỜ VÉ SỐ ###
     Bạn là một chuyên gia về vé số Việt Nam. Hãy quan sát ảnh và tìm tất cả các tờ vé số có trong ảnh.
-    Ảnh có thể được chụp bằng điện thoại nên có thể hơi mờ hoặc thiếu sáng, hãy cố gắng đọc kỹ các con số.
     
     HÃY THỰC HIỆN CÁC BƯỚC:
     1. NHẬN DIỆN: Tìm tối đa 3 tờ vé số rõ nhất trong ảnh.
     2. TRÍCH XUẤT THÔNG TIN cho TỪNG tờ vé:
-       - province: Tên tỉnh/thành phố (ví dụ: Bến Tre, Vũng Tàu...). Hãy đoán tỉnh dựa trên logo nếu tên chữ bị mờ.
+       - province: Tên tỉnh/thành phố (ví dụ: Bến Tre, Vũng Tàu...).
        - date: Ngày mở thưởng (định dạng DD-MM-YYYY).
-       - number: Dãy số dự thưởng (chuỗi số, thường là 6 chữ số). Đọc thật kỹ từng chữ số.
+       - number: Dãy số dự thưởng (chuỗi số, thường là 6 chữ số).
     3. ĐỊNH DẠNG TRẢ VỀ: Một MẢNG các đối tượng JSON.
 
     ĐỊNH DẠNG TRẢ VỀ MẪU:
@@ -102,6 +94,11 @@ def extract_ticket_info(image_bytes, api_key=None):
           "province": "Bến Tre",
           "date": "24-12-2025",
           "number": "123456"
+      }},
+      {{
+          "province": "Vũng Tàu",
+          "date": "24-12-2025",
+          "number": "654321"
       }}
     ]
 
@@ -117,7 +114,7 @@ def extract_ticket_info(image_bytes, api_key=None):
         try:
             print(f"Đang thử trích xuất thông tin bằng model: {model_name}...")
             model = genai.GenerativeModel(model_name)
-            response = model.generate_content([prompt, img], safety_settings=safety_settings)
+            response = model.generate_content([prompt, img])
             
             # Extract JSON Array using regex
             match = re.search(r'\[.*\]', response.text, re.DOTALL)
