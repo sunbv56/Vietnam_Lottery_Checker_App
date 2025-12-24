@@ -343,7 +343,7 @@
                         </div>
                     </div>
 
-                    <input type="file" id="camera-input" class="hidden" accept="image/*" capture="environment">
+                    <input type="file" id="camera-input" class="hidden" accept="image/*" capture>
                     <input type="file" id="file-input" class="hidden" accept="image/*" multiple>
                 </div>
 
@@ -902,7 +902,11 @@
         });
 
         // --- File Upload Logic ---
-        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('click', (e) => {
+            // If click is on a button or inside a button, don't trigger file library
+            if (e.target.closest('button')) return;
+            fileInput.click();
+        });
         dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('scale-[1.02]', 'border-orange-500'); });
         dropZone.addEventListener('dragleave', () => dropZone.classList.remove('scale-[1.02]', 'border-orange-500'));
         dropZone.addEventListener('drop', (e) => {
@@ -941,6 +945,7 @@
             document.getElementById('results-table-container').classList.add('hidden');
             resultsModal.style.display = 'none';
             fileInput.value = ''; // Fix: allow re-uploading same file after error
+            cameraInput.value = '';
         }
 
         let currentBatch = [];
@@ -995,7 +1000,7 @@
             if (currentBatch.length > 0) {
                 showBatchResults();
             } else {
-                showError('Không nhận diện được vé số nào từ các ảnh đã chọn.');
+                showError('Không nhận diện được vé số. Vui lòng thử lại với ảnh rõ nét hơn hoặc nhập thủ công.');
             }
         }
 
