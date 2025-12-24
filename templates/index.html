@@ -148,6 +148,67 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 15px rgba(255, 94, 58, 0.3);
         }
+
+        /* Premium Popup Styles */
+        .win-glow {
+            animation: win-glow-pulse 2s infinite;
+            text-shadow: 0 0 20px rgba(74, 222, 128, 0.5);
+        }
+
+        @keyframes win-glow-pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                filter: brightness(1);
+            }
+
+            50% {
+                transform: scale(1.02);
+                filter: brightness(1.3);
+            }
+        }
+
+        .prize-badge {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 4px 12px;
+            border-radius: 99px;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .gold-glow {
+            color: #fbbf24;
+            text-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
+        }
+
+        .silver-glow {
+            color: #cbd5e1;
+            text-shadow: 0 0 15px rgba(203, 213, 225, 0.4);
+        }
+
+        .modal-content-glass {
+            background: rgba(10, 11, 20, 0.8);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1001;
+        }
     </style>
 </head>
 
@@ -385,6 +446,87 @@
         </div>
     </div>
 
+    <!-- Results Modal -->
+    <div id="results-modal" class="modal items-center justify-center">
+        <canvas id="confetti-canvas" class="confetti-canvas"></canvas>
+        <div
+            class="modal-content-glass rounded-[2.5rem] p-6 md:p-12 w-full max-w-3xl m-4 border-white/20 relative shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar animate-fade-in">
+            <button id="close-results"
+                class="absolute top-8 right-8 text-slate-400 hover:text-white z-10 p-2 transition-transform hover:scale-110">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+
+            <div id="modal-win-container" class="hidden">
+                <div class="text-center mb-10">
+                    <div class="inline-block p-4 rounded-full bg-yellow-500/20 mb-4 win-glow">
+                        <i class="fas fa-trophy text-5xl text-yellow-400"></i>
+                    </div>
+                    <h2 class="text-4xl font-extrabold text-white mb-2 italic">CHÚC MỪNG BẠN!</h2>
+                    <p class="text-slate-400 uppercase tracking-[0.3em] text-xs font-bold">Bạn đã trúng giải</p>
+                </div>
+
+                <div id="modal-prize-display" class="flex flex-col gap-4 mb-10">
+                    <!-- Winning prizes will be injected here with big typography -->
+                </div>
+            </div>
+
+            <div id="modal-lose-container" class="hidden">
+                <div class="text-center mb-10">
+                    <div class="inline-block p-4 rounded-full bg-slate-500/10 mb-4">
+                        <i class="fas fa-heart text-5xl text-pink-500/50"></i>
+                    </div>
+                    <h2 class="text-3xl font-bold text-white mb-2">Hẹn Bạn Lần Sau</h2>
+                    <p class="text-slate-400 uppercase tracking-widest text-xs font-bold">Không trúng giải kỳ này</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+                <div class="premium-glass p-5 rounded-3xl bg-white/[0.03] border-white/10 flex items-center gap-4">
+                    <div
+                        class="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-500">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div>
+                        <p class="text-slate-500 text-[10px] uppercase font-bold tracking-tighter">Tỉnh Thành</p>
+                        <p id="modal-res-province" class="text-white font-bold text-lg">---</p>
+                    </div>
+                </div>
+                <div class="premium-glass p-5 rounded-3xl bg-white/[0.03] border-white/10 flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div>
+                        <p class="text-slate-500 text-[10px] uppercase font-bold tracking-tighter">Ngày Mở Thưởng</p>
+                        <p id="modal-res-date" class="text-white font-bold text-lg">--/--/----</p>
+                    </div>
+                </div>
+                <div
+                    class="md:col-span-2 premium-glass p-8 rounded-[2rem] text-center bg-gradient-to-br from-white/[0.05] to-transparent border-white/10 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <i class="fas fa-ticket-alt text-6xl -rotate-12"></i>
+                    </div>
+                    <p class="text-slate-500 text-[10px] uppercase font-bold tracking-[0.2em] mb-4">Số Của Bạn</p>
+                    <p id="modal-res-number" class="text-6xl font-black tracking-[0.2em] text-white">------</p>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <div class="flex items-center justify-between px-2">
+                    <h3 class="text-xs font-bold uppercase text-slate-500 tracking-widest">Chi tiết kết quả nhà đài</h3>
+                    <div class="h-px bg-white/10 flex-grow ml-4"></div>
+                </div>
+                <div id="modal-results-table-container"></div>
+            </div>
+
+            <div class="mt-12 flex gap-4">
+                <button id="close-results-btn"
+                    class="flex-grow gradient-bg py-5 rounded-[1.5rem] font-bold btn-hover uppercase tracking-widest text-sm shadow-xl shadow-orange-500/20 flex items-center justify-center gap-2">
+                    <span>Đã hiểu</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // DOM Elements
         const dropZone = document.getElementById('drop-zone');
@@ -400,6 +542,7 @@
         const errorMsg = document.getElementById('error-msg');
         const historyList = document.getElementById('history-list');
         const emptyHistory = document.getElementById('empty-history');
+        const resultsModal = document.getElementById('results-modal');
 
         const flipBtn = document.getElementById('flip-camera');
         let isMirrored = false;
@@ -457,7 +600,6 @@
             previewImg.classList.add('hidden'); // Hide preview for history recall
             loading.classList.add('hidden');
             showResults(item);
-            renderResultsTable(item.results);
         }
 
         function clearHistory() {
@@ -660,6 +802,7 @@
             loading.classList.remove('hidden');
             previewImg.classList.remove('hidden');
             document.getElementById('results-table-container').classList.add('hidden');
+            resultsModal.style.display = 'none';
         }
 
         async function processImage(dataUrl) {
@@ -697,28 +840,63 @@
             if (isEditMode) toggleEditMode();
 
             resultsData.classList.remove('hidden');
+            // Main UI
             document.getElementById('res-province').textContent = data.info.province;
             document.getElementById('res-date').textContent = data.info.date;
             document.getElementById('res-number').textContent = data.info.number;
 
-            renderResultsTable(data.results);
+            // Modal UI
+            document.getElementById('modal-res-province').textContent = data.info.province;
+            document.getElementById('modal-res-date').textContent = data.info.date;
+            document.getElementById('modal-res-number').textContent = data.info.number;
+            renderResultsTable(data.results, 'results-table-container');
+            renderResultsTable(data.results, 'modal-results-table-container');
 
             const winStatus = document.getElementById('win-status');
-            if (data.win_details && data.win_details.length > 0) {
-                let winHtml = '';
+            const modalWinContainer = document.getElementById('modal-win-container');
+            const modalLoseContainer = document.getElementById('modal-lose-container');
+            const modalPrizeDisplay = document.getElementById('modal-prize-display');
+
+            let winHtml = '';
+            let modalPrizeHtml = '';
+            const isWin = data.win_details && data.win_details.length > 0;
+
+            if (isWin) {
+                modalWinContainer.classList.remove('hidden');
+                modalLoseContainer.classList.add('hidden');
+
                 data.win_details.forEach(detail => {
                     const val = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(detail.value);
+                    const isBigWin = detail.value >= 10000000; // Big win if >= 10M
+
+                    // Main UI HTML
                     winHtml += `
-                        <div class="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-6 rounded-2xl text-center shadow-lg animate-bounce duration-1000">
+                        <div class="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-6 rounded-2xl text-center shadow-lg mb-4">
                             <i class="fas fa-trophy text-3xl mb-2 block"></i>
                             <h4 class="font-extrabold text-xl uppercase">${detail.name}</h4>
                             <p class="text-3xl font-black mt-1">${val}</p>
                         </div>
                     `;
+
+                    // Modal UI HTML (Xịn xò)
+                    modalPrizeHtml += `
+                        <div class="premium-glass p-8 rounded-[2rem] bg-gradient-to-br from-green-500/10 to-emerald-500/5 border-green-500/20 text-center relative overflow-hidden">
+                            <div class="prize-badge mb-4 ${detail.name.includes('Đặc Biệt') ? 'gold-glow' : 'silver-glow'}">
+                                <i class="fas fa-star"></i>
+                                <span>${detail.name}</span>
+                            </div>
+                            <p class="text-5xl font-black text-white win-glow mb-2">${val}</p>
+                            ${isBigWin ? '<p class="text-green-400 text-[10px] font-bold uppercase tracking-widest mt-2 animate-pulse">JACKPOT WINNER!</p>' : ''}
+                        </div>
+                    `;
                 });
-                winStatus.innerHTML = winHtml;
+                modalPrizeDisplay.innerHTML = modalPrizeHtml;
+                startConfetti();
             } else {
-                winStatus.innerHTML = `
+                modalWinContainer.classList.add('hidden');
+                modalLoseContainer.classList.remove('hidden');
+
+                winHtml = `
                     <div class="premium-glass p-6 rounded-2xl text-center border-white/5 bg-white/[0.02]">
                         <i class="fas fa-heart text-pink-500 mb-2 block"></i>
                         <p class="font-bold text-slate-400">Không trúng giải - Chúc bạn may mắn lần sau!</p>
@@ -726,7 +904,48 @@
                 `;
             }
 
-            setTimeout(() => { resultsData.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
+            winStatus.innerHTML = winHtml;
+
+            // Open Modal
+            resultsModal.style.display = 'flex';
+        }
+
+        // Simple Confetti
+        function startConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            let particles = [];
+            const colors = ['#ff5e3a', '#ff2a6d', '#fbbf24', '#34d399', '#60a5fa'];
+
+            for (let i = 0; i < 150; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    size: Math.random() * 8 + 4,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    speed: Math.random() * 5 + 2,
+                    angle: Math.random() * 6.28
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach((p, i) => {
+                    p.y += p.speed;
+                    p.x += Math.sin(p.angle) * 1.5;
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size / 2, 0, 6.28);
+                    ctx.fill();
+
+                    if (p.y > canvas.height) particles[i].y = -10;
+                });
+                if (resultsModal.style.display === 'flex') requestAnimationFrame(draw);
+            }
+            draw();
         }
 
         function showError(msg) {
@@ -753,8 +972,8 @@
             document.getElementById('stat-lucky').textContent = luckyCount;
         }
 
-        function renderResultsTable(results) {
-            const container = document.getElementById('results-table-container');
+        function renderResultsTable(results, containerId = 'results-table-container') {
+            const container = document.getElementById(containerId);
             if (!results) {
                 container.classList.add('hidden');
                 return;
@@ -813,6 +1032,14 @@
             if (key) localStorage.setItem('gemini_api_key', key);
             else localStorage.removeItem('gemini_api_key');
             settingsModal.style.display = 'none';
+        });
+
+        // Results Modal Events
+        document.getElementById('close-results').addEventListener('click', () => resultsModal.style.display = 'none');
+        document.getElementById('close-results-btn').addEventListener('click', () => resultsModal.style.display = 'none');
+        window.addEventListener('click', (e) => {
+            if (e.target === settingsModal) settingsModal.style.display = 'none';
+            if (e.target === resultsModal) resultsModal.style.display = 'none';
         });
 
         // PWA Registration
