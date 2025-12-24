@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lottery-ai-v1';
+const CACHE_NAME = 'lottery-ai-v1.1';
 const ASSETS = [
     '/',
     '/static/manifest.json',
