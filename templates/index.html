@@ -214,10 +214,54 @@
         }
 
         .modal-content-glass {
-            background: rgba(10, 11, 20, 0.8);
+            background: rgba(10, 11, 20, 0.95);
             backdrop-filter: blur(40px);
             -webkit-backdrop-filter: blur(40px);
             border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            .modal {
+                align-items: flex-end;
+            }
+
+            .modal-content-glass {
+                border-radius: 2.5rem 2.5rem 0 0 !important;
+                margin: 0 !important;
+                max-height: 95vh !important;
+                width: 100% !important;
+                padding-top: 3rem !important;
+                animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            }
+
+            @keyframes slideUp {
+                from {
+                    transform: translateY(100%);
+                }
+
+                to {
+                    transform: translateY(0);
+                }
+            }
+
+            .mobile-handle {
+                display: block;
+                width: 40px;
+                height: 4px;
+                background: rgba(255, 255, 255, 0.2);
+                border-radius: 2px;
+                margin: 0 auto;
+                position: absolute;
+                top: 12px;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+        }
+
+        @media (min-width: 769px) {
+            .mobile-handle {
+                display: none;
+            }
         }
 
         .confetti-canvas {
@@ -337,7 +381,8 @@
                                     <p class="text-slate-400 text-[10px] uppercase tracking-widest font-bold mb-2">Số
                                         Của Bạn</p>
                                     <p id="res-number"
-                                        class="text-5xl font-black tracking-[0.2em] text-white outline-none">------
+                                        class="text-4xl md:text-5xl font-black tracking-[0.15em] md:tracking-[0.2em] text-white outline-none">
+                                        ------
                                     </p>
                                 </div>
                             </div>
@@ -481,18 +526,20 @@
         <canvas id="confetti-canvas" class="confetti-canvas"></canvas>
         <div
             class="modal-content-glass rounded-[2.5rem] p-6 md:p-12 w-full max-w-3xl m-4 border-white/20 relative shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar animate-fade-in">
+            <div class="mobile-handle"></div>
             <button id="close-results"
-                class="absolute top-8 right-8 text-slate-400 hover:text-white z-10 p-2 transition-transform hover:scale-110">
-                <i class="fas fa-times text-2xl"></i>
+                class="absolute top-4 right-4 md:top-8 md:right-8 text-slate-400 hover:text-white z-10 p-2 transition-transform hover:scale-110">
+                <i class="fas fa-times text-xl md:text-2xl"></i>
             </button>
 
             <div id="modal-win-container" class="hidden">
-                <div class="text-center mb-10">
-                    <div class="inline-block p-4 rounded-full bg-yellow-500/20 mb-4 win-glow">
-                        <i class="fas fa-trophy text-5xl text-yellow-400"></i>
+                <div class="text-center mb-6 md:mb-8">
+                    <div class="inline-block p-3 rounded-full bg-yellow-500/10 mb-3 win-glow">
+                        <i class="fas fa-trophy text-3xl md:text-4xl text-yellow-500/80"></i>
                     </div>
-                    <h2 class="text-4xl font-extrabold text-white mb-2 italic">CHÚC MỪNG BẠN!</h2>
-                    <p class="text-slate-400 uppercase tracking-[0.3em] text-xs font-bold">Bạn đã trúng giải</p>
+                    <h2 class="text-2xl md:text-3xl font-bold text-white/90 mb-1 italic">CHÚC MỪNG BẠN!</h2>
+                    <p class="text-slate-500 uppercase tracking-[0.2em] text-[9px] md:text-[10px] font-bold">Bạn đã
+                        trúng giải</p>
                 </div>
 
                 <div id="modal-prize-display" class="flex flex-col gap-4 mb-10">
@@ -501,12 +548,13 @@
             </div>
 
             <div id="modal-lose-container" class="hidden">
-                <div class="text-center mb-10">
+                <div class="text-center mb-8 md:mb-10">
                     <div class="inline-block p-4 rounded-full bg-slate-500/10 mb-4">
-                        <i class="fas fa-heart text-5xl text-pink-500/50"></i>
+                        <i class="fas fa-heart text-4xl md:text-5xl text-pink-500/50"></i>
                     </div>
-                    <h2 class="text-3xl font-bold text-white mb-2">Hẹn Bạn Lần Sau</h2>
-                    <p class="text-slate-400 uppercase tracking-widest text-xs font-bold">Không trúng giải kỳ này</p>
+                    <h2 class="text-2xl md:text-3xl font-bold text-white mb-2">Hẹn Bạn Lần Sau</h2>
+                    <p class="text-slate-400 uppercase tracking-widest text-[10px] md:text-xs font-bold">Không trúng
+                        giải kỳ này</p>
                 </div>
             </div>
 
@@ -531,12 +579,10 @@
                     </div>
                 </div>
                 <div
-                    class="md:col-span-2 premium-glass p-8 rounded-[2rem] text-center bg-gradient-to-br from-white/[0.05] to-transparent border-white/10 relative overflow-hidden group">
-                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <i class="fas fa-ticket-alt text-6xl -rotate-12"></i>
-                    </div>
-                    <p class="text-slate-500 text-[10px] uppercase font-bold tracking-[0.2em] mb-4">Số Của Bạn</p>
-                    <p id="modal-res-number" class="text-6xl font-black tracking-[0.2em] text-white">------</p>
+                    class="md:col-span-2 premium-glass p-5 md:p-6 rounded-2xl md:rounded-3xl text-center bg-white/[0.03] border-white/5 relative overflow-hidden group">
+                    <p class="text-slate-500 text-[10px] uppercase font-bold tracking-[0.2em] mb-2">Số Của Bạn</p>
+                    <p id="modal-res-number" class="text-3xl md:text-4xl font-black tracking-[0.1em] text-white">------
+                    </p>
                 </div>
             </div>
 
@@ -548,13 +594,13 @@
                 <div id="modal-results-table-container"></div>
             </div>
 
-            <div class="mt-12 flex gap-4">
+            <div class="mt-8 md:mt-12 flex flex-col sm:flex-row gap-3 md:gap-4">
                 <button id="close-results-btn"
-                    class="flex-grow bg-white/10 py-5 rounded-[1.5rem] font-bold hover:bg-white/20 transition-all uppercase tracking-widest text-sm border border-white/10">
+                    class="flex-grow bg-white/10 py-4 md:py-5 rounded-2xl md:rounded-[1.5rem] font-bold hover:bg-white/20 transition-all uppercase tracking-widest text-xs md:text-sm border border-white/10">
                     <span>Đã hiểu</span>
                 </button>
                 <button id="share-win-btn" onclick="downloadWinImage()"
-                    class="flex-grow gradient-bg py-5 rounded-[1.5rem] font-bold btn-hover uppercase tracking-widest text-sm shadow-xl shadow-orange-500/20 flex items-center justify-center gap-2 hidden">
+                    class="flex-grow gradient-bg py-4 md:py-5 rounded-2xl md:rounded-[1.5rem] font-bold btn-hover uppercase tracking-widest text-xs md:text-sm shadow-xl shadow-orange-500/20 flex items-center justify-center gap-2 hidden">
                     <i class="fas fa-share-alt"></i>
                     <span>Chia sẻ</span>
                 </button>
@@ -1028,13 +1074,13 @@
 
                     // Modal UI HTML (Xịn xò)
                     modalPrizeHtml += `
-                        <div class="premium-glass p-8 rounded-[2rem] bg-gradient-to-br from-green-500/10 to-emerald-500/5 border-green-500/20 text-center relative overflow-hidden">
-                            <div class="prize-badge mb-4 ${detail.name.includes('Đặc Biệt') ? 'gold-glow' : 'silver-glow'}">
-                                <i class="fas fa-star"></i>
-                                <span>${detail.name}</span>
+                        <div class="premium-glass p-6 md:p-8 rounded-[2rem] bg-gradient-to-br from-green-500/20 to-emerald-500/5 border-green-500/30 text-center relative overflow-hidden shadow-2xl flex flex-col items-center justify-center min-h-[160px] md:min-h-[200px]">
+                            <div class="prize-badge mb-4 md:mb-6 ${detail.name.includes('Đặc Biệt') ? 'gold-glow' : 'silver-glow'}">
+                                <i class="fas fa-star text-[10px]"></i>
+                                <span class="text-[10px] md:text-[12px]">${detail.name}</span>
                             </div>
-                            <p class="text-5xl font-black text-white win-glow mb-2">${val}</p>
-                            ${isBigWin ? '<p class="text-green-400 text-[10px] font-bold uppercase tracking-widest mt-2 animate-pulse">JACKPOT WINNER!</p>' : ''}
+                            <p class="text-3xl md:text-5xl lg:text-7xl font-black text-white win-glow mb-2 md:mb-4 tracking-tight uppercase leading-none break-words w-full">${val}</p>
+                            ${isBigWin ? '<p class="text-green-400 text-[10px] md:text-[12px] font-bold uppercase tracking-[0.2em] mt-2 animate-pulse">JACKPOT WINNER!</p>' : ''}
                         </div>
                     `;
                 });
