@@ -40,6 +40,8 @@ PROVINCE_MAP = {
 
 # Danh sách các model để fallback (ưu tiên model cao nhất/mới nhất)
 MODELS_TO_TRY = [
+    'gemma-3-27b-it',
+    'gemma-3-12b-it',
     'gemini-2.5-flash',
     'gemini-2.5-flash-preview-09-2025',
     'gemini-3-flash-preview',
