@@ -1360,59 +1360,262 @@
             const data = currentBatch[currentIndex];
             if (!data || !data.win_details || data.win_details.length === 0) return;
 
+            const detail = data.win_details[0]; // Primary prize
+            const valNum = detail.value;
+            const valStr = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(valNum);
+
+            // Determine Tier
+            let theme = {
+                id: 'standard',
+                primary: '#ff5e3a',
+                accent: '#ff2a6d',
+                bgStart: '#1a1b26',
+                bgEnd: '#0a0b14',
+                cardBg: 'rgba(255, 255, 255, 0.08)',
+                glow: 'rgba(255, 94, 58, 0.15)',
+                text: '#ffffff',
+                badgeText: '#ff5e3a'
+            };
+
+            if (valNum >= 500000000) { // Grand Tier (>= 500M)
+                theme = {
+                    id: 'grand',
+                    primary: '#fbbf24', // Gold
+                    accent: '#f59e0b',
+                    bgStart: '#1e1b10', // Dark Gold/Earth
+                    bgEnd: '#0a0904',
+                    cardBg: 'rgba(251, 191, 36, 0.1)',
+                    glow: 'rgba(251, 191, 36, 0.2)',
+                    text: '#fbbf24',
+                    badgeText: '#000000'
+                };
+            } else if (valNum >= 10000000) { // Major Tier (>= 10M)
+                theme = {
+                    id: 'major',
+                    primary: '#e2e8f0', // Bright Silver
+                    accent: '#94a3b8',
+                    bgStart: '#0f172a', // Deeper Blue-Black
+                    bgEnd: '#020617',
+                    cardBg: 'rgba(255, 255, 255, 0.12)',
+                    glow: 'rgba(255, 255, 255, 0.1)',
+                    text: '#ffffff',
+                    badgeText: '#0f172a'
+                };
+            }
+
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             canvas.width = 1200;
             canvas.height = 630;
 
-            // Background Gradient
-            const grad = ctx.createLinearGradient(0, 0, 1200, 630);
-            grad.addColorStop(0, '#0a0b14');
-            grad.addColorStop(1, '#1e293b');
-            ctx.fillStyle = grad;
+            // 1. Background
+            const baseGrad = ctx.createRadialGradient(600, 315, 0, 600, 315, 800);
+            baseGrad.addColorStop(0, theme.bgStart);
+            baseGrad.addColorStop(1, theme.bgEnd);
+            ctx.fillStyle = baseGrad;
             ctx.fillRect(0, 0, 1200, 630);
 
-            // Accents
-            ctx.fillStyle = 'rgba(255, 94, 58, 0.1)';
+            // 2. Ambient Lights
+            const drawGlow = (x, y, radius, color) => {
+                const grad = ctx.createRadialGradient(x, y, 0, x, y, radius);
+                grad.addColorStop(0, color);
+                grad.addColorStop(1, 'transparent');
+                ctx.fillStyle = grad;
+                ctx.globalCompositeOperation = 'screen';
+                ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
+                ctx.globalCompositeOperation = 'source-over';
+            };
+            drawGlow(0, 0, 400, theme.glow);
+            drawGlow(1200, 630, 500, theme.glow);
+
+            // 2.5 Background Watermark
+            ctx.save();
+            ctx.globalAlpha = theme.id === 'grand' ? 0.08 : 0.05;
+            ctx.font = '280px Outfit, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = theme.primary;
+            ctx.fillText('🏆', 600, 420);
+
+            // Tier Specific Effects
+            if (theme.id === 'grand' || theme.id === 'major') {
+                const drawStar = (x, y, radius, color) => {
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.translate(x, y);
+                    ctx.moveTo(0, 0 - radius);
+                    for (let i = 0; i < 5; i++) {
+                        ctx.rotate(Math.PI / 5);
+                        ctx.lineTo(0, 0 - (radius * 0.4));
+                        ctx.rotate(Math.PI / 5);
+                        ctx.lineTo(0, 0 - radius);
+                    }
+                    ctx.fillStyle = color;
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = color;
+                    ctx.fill();
+                    ctx.restore();
+                };
+
+                const starCount = theme.id === 'grand' ? 60 : 40;
+                for (let i = 0; i < starCount; i++) {
+                    const x = Math.random() * 1200;
+                    const y = Math.random() * 630;
+                    const size = Math.random() * (theme.id === 'grand' ? 8 : 6) + 2;
+                    ctx.globalAlpha = Math.random() * 0.4 + 0.1;
+
+                    if (Math.random() > 0.7) {
+                        drawStar(x, y, size, theme.primary);
+                    } else {
+                        ctx.beginPath();
+                        ctx.arc(x, y, size / 3, 0, Math.PI * 2);
+                        ctx.fillStyle = theme.primary;
+                        ctx.fill();
+                    }
+                }
+
+                if (theme.id === 'major') {
+                    // Add Diagonal Beams for Major
+                    ctx.save();
+                    ctx.globalCompositeOperation = 'screen';
+                    for (let i = 0; i < 3; i++) {
+                        const grad = ctx.createLinearGradient(0, 0, 1200, 630);
+                        grad.addColorStop(0, 'transparent');
+                        grad.addColorStop(Math.random() * 0.5 + 0.2, 'rgba(255, 255, 255, 0.05)');
+                        grad.addColorStop(1, 'transparent');
+                        ctx.fillStyle = grad;
+                        ctx.rotate((Math.random() - 0.5) * 0.1);
+                        ctx.fillRect(0, -1000, 2000, 2000);
+                    }
+                    ctx.restore();
+                }
+            }
+            ctx.restore();
+
+            // 3. Central Glass Card
+            const cardWidth = 1000;
+            const cardHeight = 450;
+            const cardX = (1200 - cardWidth) / 2;
+            const cardY = (630 - cardHeight) / 2 + 20;
+            const radius = 40;
+
+            // Card Shadow
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+            ctx.shadowBlur = 40;
+            ctx.shadowOffsetY = 20;
+
+            // Card Shape & Fill
             ctx.beginPath();
-            ctx.arc(0, 0, 400, 0, Math.PI * 2);
+            ctx.roundRect ? ctx.roundRect(cardX, cardY, cardWidth, cardHeight, radius) : ctx.rect(cardX, cardY, cardWidth, cardHeight);
+
+            const cardGrad = ctx.createLinearGradient(cardX, cardY, cardX + cardWidth, cardY + cardHeight);
+            cardGrad.addColorStop(0, theme.cardBg);
+            cardGrad.addColorStop(1, 'rgba(255, 255, 255, 0.02)');
+            ctx.fillStyle = cardGrad;
             ctx.fill();
 
-            // Text Styles
+            // Card Border
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetY = 0;
+            const borderGrad = ctx.createLinearGradient(cardX, cardY, cardX + cardWidth, cardY + cardHeight);
+            borderGrad.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
+            borderGrad.addColorStop(1, 'rgba(255, 255, 255, 0.05)');
+            ctx.strokeStyle = borderGrad;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // 4. Header Section
+            const logoGrad = ctx.createLinearGradient(540, 0, 660, 0);
+            logoGrad.addColorStop(0, theme.primary);
+            logoGrad.addColorStop(1, theme.accent || theme.primary);
+            ctx.fillStyle = logoGrad;
+            ctx.font = '800 32px Outfit, sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillStyle = '#ffffff';
+            ctx.fillText('LOTTERY AI', 600, 60);
 
-            // App Title
-            ctx.font = '800 40px Outfit, sans-serif';
-            ctx.fillText('LOTTERY AI', 600, 80);
+            ctx.font = '700 12px Outfit, sans-serif';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.fillText('OFFICIAL VERIFIED RESULT', 600, 85);
 
-            // Trophy Icon (Simple drawing or just text if icon is hard)
-            ctx.font = '100px serif';
-            ctx.fillText('🏆', 600, 200);
+            // 5. Winning Content
+            const prizeLabel = detail.name.toUpperCase();
 
-            ctx.font = '900 80px Outfit, sans-serif';
-            ctx.fillStyle = '#ff5e3a';
-            ctx.fillText('CHÚC MỪNG BẠN!', 600, 300);
+            // Prize Name Badge
+            ctx.font = '800 18px Outfit, sans-serif';
+            const textWidth = ctx.measureText(prizeLabel).width;
+            const badgeW = textWidth + 40;
+            const badgeH = 34;
+            const badgeX = 600 - badgeW / 2;
+            const badgeY = cardY + 60;
 
-            const detail = data.win_details[0]; // Share the first/highest prize
-            const val = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(detail.value);
+            ctx.fillStyle = theme.id === 'major' ? theme.id === 'major' ? '#cbd5e1' : theme.primary : theme.primary; // Overridden for major badge text if needed
+            if (theme.id === 'major') {
+                ctx.fillStyle = '#0f172a'; // Contrast text for silver badge
+                const silverBadgeGrad = ctx.createLinearGradient(badgeX, badgeY, badgeX + badgeW, badgeY + badgeH);
+                silverBadgeGrad.addColorStop(0, '#f8fafc');
+                silverBadgeGrad.addColorStop(0.5, '#cbd5e1');
+                silverBadgeGrad.addColorStop(1, '#94a3b8');
+                ctx.save();
+                ctx.fillStyle = silverBadgeGrad;
+                ctx.beginPath();
+                ctx.roundRect ? ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 17) : ctx.rect(badgeX, badgeY, badgeW, badgeH);
+                ctx.fill();
+                ctx.restore();
+                ctx.fillStyle = '#0f172a';
+            } else {
+                ctx.fillStyle = theme.id === 'grand' ? theme.primary : 'rgba(255, 255, 255, 0.1)';
+                ctx.beginPath();
+                ctx.roundRect ? ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 17) : ctx.rect(badgeX, badgeY, badgeW, badgeH);
+                ctx.fill();
+                ctx.fillStyle = theme.badgeText;
+            }
 
-            ctx.font = '600 30px Outfit, sans-serif';
-            ctx.fillStyle = '#94a3b8';
-            ctx.fillText(`CÁC SỐ TRÚNG GIẢI: ${detail.name.toUpperCase()}`, 600, 380);
+            ctx.fillText(prizeLabel, 600, badgeY + 23);
 
-            ctx.font = '900 120px Outfit, sans-serif';
-            ctx.fillStyle = '#ffffff';
-            ctx.fillText(val, 600, 520);
+            // The BIG Number
+            ctx.shadowColor = theme.id === 'grand' ? 'rgba(251, 191, 36, 0.6)' : theme.id === 'major' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 94, 58, 0.5)';
+            ctx.shadowBlur = 40;
+            ctx.fillStyle = theme.text;
+            ctx.font = '900 110px Outfit, sans-serif';
+            ctx.fillText(valStr, 600, cardY + 220);
+            ctx.shadowBlur = 0;
 
-            ctx.font = '400 24px Outfit, sans-serif';
-            ctx.fillStyle = '#64748b';
-            ctx.fillText(`Vé: ${data.info.number} - Đài ${data.info.province} - Ngày ${data.info.date}`, 600, 580);
+            // Congratulation Text
+            ctx.font = '600 24px Outfit, sans-serif';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.fillText('CHÚC MỪNG BẠN ĐÃ TRÚNG GIẢI!', 600, cardY + 280);
+
+            // 6. Footer Details
+            const infoY = cardY + 360;
+            ctx.beginPath();
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.moveTo(cardX + 100, infoY - 20);
+            ctx.lineTo(cardX + cardWidth - 100, infoY - 20);
+            ctx.stroke();
+
+            const drawInfo = (label, value, x) => {
+                ctx.textAlign = 'center';
+                ctx.font = '800 12px Outfit, sans-serif';
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                ctx.fillText(label, x, infoY);
+                ctx.font = '700 24px Outfit, sans-serif';
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText(value, x, infoY + 35);
+            };
+
+            drawInfo('SỐ VÉ', data.info.number, 600 - 300);
+            drawInfo('TỈNH THÀNH', data.info.province.toUpperCase(), 600);
+            drawInfo('NGÀY MỞ', data.info.date, 600 + 300);
+
+            // 7. Small Note
+            ctx.font = '400 14px Outfit, sans-serif';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.textAlign = 'center';
+            ctx.fillText('Kết quả được đối soát tự động từ hệ thống KQXS Xây Số', 600, 620);
 
             // Trigger Download
             const link = document.createElement('a');
             link.download = `LotteryAI_Win_${data.info.number}.png`;
-            link.href = canvas.toDataURL('image/png');
+            link.href = canvas.toDataURL('image/png', 1.0);
             link.click();
         }
 
