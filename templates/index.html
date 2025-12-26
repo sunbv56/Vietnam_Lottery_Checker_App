@@ -798,6 +798,7 @@
             currentBatch = [item];
             currentIndex = 0;
 
+            renderNavigation(); // Ensure nav is hidden/updated for single item
             showResults(item, true); // Force auto-open modal for history
         }
 
@@ -1020,6 +1021,10 @@
             cameraUI.classList.add('hidden');
             cameraUI.style.display = 'none';
             fileInput.value = ''; // Fix: allow re-uploading same file after error
+
+            // Hide batch navigation
+            const nav = document.getElementById('batch-nav');
+            if (nav) nav.classList.add('hidden');
         }
 
         let currentBatch = [];
