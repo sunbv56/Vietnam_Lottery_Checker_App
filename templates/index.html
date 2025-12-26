@@ -1024,6 +1024,7 @@
 
         let currentBatch = [];
         let currentIndex = 0;
+        let batchErrors = [];
 
         async function processImages(dataUrls) {
             resetUI();
@@ -1036,6 +1037,7 @@
             const apiKey = localStorage.getItem('gemini_api_key');
             currentBatch = [];
             currentIndex = 0;
+            batchErrors = [];
 
             for (let i = 0; i < dataUrls.length; i++) {
                 if (dataUrls.length > 1) {
@@ -1053,18 +1055,25 @@
                     const data = await response.json();
 
                     if (data.results && Array.isArray(data.results)) {
-                        // Combine results from this image into our total batch
-                        currentBatch = currentBatch.concat(data.results);
-
-                        // Save each to history
                         data.results.forEach(res => {
-                            if (res.status === 'OK' || res.status === 'NOT_READY') {
+                            if (res.status === 'OK') {
+                                res.imageUrl = dataUrls[i]; // Store image for navigation sync
+                                currentBatch.push(res);
                                 saveToHistory(res);
+                            } else {
+                                // Collect errors/not_ready for summary
+                                batchErrors.push(res);
+                                if (res.status === 'NOT_READY') {
+                                    saveToHistory(res); // Still save NOT_READY to history
+                                }
                             }
                         });
+                    } else if (data.error) {
+                        batchErrors.push({ status: 'ERROR', message: data.error });
                     }
                 } catch (err) {
                     console.error("Lỗi xử lý ảnh:", err);
+                    batchErrors.push({ status: 'ERROR', message: 'Kết nối mạng thất bại' });
                 }
             }
 
@@ -1073,9 +1082,29 @@
 
             if (currentBatch.length > 0) {
                 showBatchResults();
+                if (batchErrors.length > 0) {
+                    showBatchSummaryNotification();
+                }
             } else {
-                showError('Không nhận diện được vé số nào từ các ảnh đã chọn.');
+                // If all failed, show the primary error screen with a consolidated message
+                const errorMsgText = batchErrors.length > 1
+                    ? `Đã quét xong ${dataUrls.length} ảnh nhưng không thể nhận diện được vé số nào hợp lệ.`
+                    : (batchErrors[0]?.message || 'Không thể nhận diện vé số.');
+                showError(errorMsgText);
             }
+        }
+
+        function showBatchSummaryNotification() {
+            // Create a temporary toast/notification for batch errors
+            const notification = document.createElement('div');
+            notification.className = 'fixed bottom-24 left-1/2 -translate-x-1/2 z-[2000] premium-glass px-6 py-4 rounded-2xl border-orange-500/30 text-orange-400 font-bold shadow-2xl animate-fade-in flex items-center gap-3 backdrop-blur-xl';
+            notification.innerHTML = `
+                <i class="fas fa-info-circle"></i>
+                <span>Phát hiện ${batchErrors.length} vé có lỗi hoặc chưa có kết quả.</span>
+                <button onclick="this.parentElement.remove()" class="ml-2 opacity-50 hover:opacity-100"><i class="fas fa-times"></i></button>
+            `;
+            document.body.appendChild(notification);
+            setTimeout(() => { if (notification.parentNode) notification.remove(); }, 6000);
         }
 
         function showBatchResults() {
@@ -1083,14 +1112,13 @@
 
             const data = currentBatch[currentIndex];
 
-            // Handle different statuses
-            if (data.status === 'NOT_READY') {
-                showPendingMessage(data.message);
-            } else if (data.status === 'ERROR') {
-                showError(data.message || 'Lỗi xử lý vé này');
-            } else {
-                showResults(data, false); // No auto-open in batch mode
+            // Sync image with current ticket
+            if (data.imageUrl) {
+                previewImg.src = data.imageUrl;
+                previewImg.classList.remove('hidden');
             }
+
+            showResults(data, false); // No auto-open in batch mode
 
             // Update navigation UI
             renderNavigation();
