@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import os
-from utils import extract_ticket_info, crawl_kqxs_final, check_win, PROVINCE_MAP
+from utils import extract_ticket_info, crawl_kqxs_final, check_win, PROVINCE_MAP, normalize_date
 import base64
 import socket
 
@@ -47,7 +47,7 @@ def check_ticket():
         
         for info in tickets:
             province = str(info.get('province', '')).lower()
-            date = str(info.get('date', ''))
+            date = normalize_date(str(info.get('date', '')))
             number = str(info.get('number', ''))
             
             # Find province slug

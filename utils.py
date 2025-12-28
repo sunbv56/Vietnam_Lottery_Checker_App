@@ -14,6 +14,23 @@ genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 model = genai.GenerativeModel('gemini-2.5-flash')
 
 PROVINCE_MAP = {
+    # --- MIỀN NAM (Full 21 lotteries) ---
+    "tp.hcm": "tp-hcm",
+    "hồ chí minh": "tp-hcm",
+    "tp hồ chí minh": "tp-hcm",
+    "thành phố hồ chí minh": "tp-hcm",
+    "vĩnh long": "vinh-long",
+    "bình dương": "binh-duong",
+    "trà vinh": "tra-vinh",
+    "long an": "long-an",
+    "hậu giang": "hau-giang",
+    "bình phước": "binh-phuoc",
+    "tiền giang": "tien-giang",
+    "kiên giang": "kien-giang",
+    "đà lạt": "da-lat",
+    "lâm đồng": "da-lat",
+    "cà mau": "ca-mau",
+    "đồng tháp": "dong-thap",
     "bến tre": "ben-tre",
     "vũng tàu": "vung-tau",
     "bạc liêu": "bac-lieu",
@@ -23,30 +40,45 @@ PROVINCE_MAP = {
     "tây ninh": "tay-ninh",
     "an giang": "an-giang",
     "bình thuận": "binh-thuan",
-    "vĩnh long": "vinh-long",
-    "bình dương": "binh-duong",
-    "trà vinh": "tra-vinh",
-    "tp.hcm": "tp-hcm",
-    "hồ chí minh": "tp-hcm",
-    "tp hồ chí minh": "tp-hcm",
-    "thành phố hồ chí minh": "tp-hcm",
-    "long an": "long-an",
-    "hậu giang": "hau-giang",
-    "bình phước": "binh-phuoc",
-    "tiền giang": "tien-giang",
-    "kiên giang": "kien-giang",
-    "đà lạt": "da-lat",
+    
+    # --- MIỀN TRUNG ---
+    "thừa thiên huế": "thua-thien-hue",
+    "huế": "thua-thien-hue",
+    "phú yên": "phu-yen",
+    "đắk lắk": "dak-lak",
+    "đắc lắc": "dak-lak",
+    "quảng nam": "quang-nam",
+    "đà nẵng": "da-nang",
+    "quảng bình": "quang-binh",
+    "quảng trị": "quang-tri",
+    "bình định": "binh-dinh",
+    "gia lai": "gia-lai",
+    "khánh hòa": "khanh-hoa",
+    "nha trang": "khanh-hoa",
+    "kon tum": "kon-tum",
+    "ninh thuận": "ninh-thuan",
+    "quảng ngãi": "quang-ngai",
+    "đắk nông": "dak-nong",
+    
+    # --- MIỀN BẮC ---
+    "miền bắc": "mien-bac",
+    "hà nội": "mien-bac",
+    "quảng ninh": "quang-ninh",
+    "bắc ninh": "bac-ninh",
+    "thái bình": "thai-binh",
+    "nam định": "nam-dinh",
+    "hải phòng": "hai-phong"
 }
 
 # Danh sách các model để fallback (ưu tiên model cao nhất/mới nhất)
 MODELS_TO_TRY = [
     'gemma-3-27b-it',
     'gemma-3-12b-it',
-    'gemini-2.5-flash',
-    'gemini-2.5-flash-preview-09-2025',
-    'gemini-3-flash-preview',
-    'gemini-2.5-flash-lite',
-    'gemini-2.0-flash'
+    # 'gemini-2.5-flash',
+    # 'gemini-2.5-flash-preview-09-2025',
+    # 'gemini-3-flash-preview',
+    # 'gemini-2.5-flash-lite',
+    # 'gemini-2.0-flash'
 ]
 
 PRIZE_VALUES = {
@@ -63,83 +95,97 @@ PRIZE_VALUES = {
     "Giải Khuyến Khích": 6000000
 }
 
+def normalize_date(date_str):
+    """Chuyển đổi các định dạng ngày về DD-MM-YYYY"""
+    if not date_str: return ""
+    # Thay thế / , . bằng -
+    date_str = re.sub(r'[/\.,\s]', '-', str(date_str))
+    # Loại bỏ các ký tự không phải số hoặc -
+    date_str = re.sub(r'[^0-9-]', '', date_str)
+    
+    # Xử lý trường hợp YYYY-MM-DD
+    match_iso = re.match(r'(\d{4})-(\d{2})-(\d{2})', date_str)
+    if match_iso:
+        y, m, d = match_iso.groups()
+        return f"{d}-{m}-{y}"
+        
+    # Đảm bảo có đủ 2 dấu gạch ngang
+    parts = date_str.split('-')
+    if len(parts) == 3:
+        d, m, y = parts
+        # Thêm số 0 nếu thiếu (vd: 1-1-2025 -> 01-01-2025)
+        d = d.zfill(2)
+        m = m.zfill(2)
+        if len(y) == 2: y = "20" + y # 25 -> 2025
+        return f"{d}-{m}-{y}"
+        
+    return date_str
+
 def extract_ticket_info(image_bytes, api_key=None):
     """
     Sử dụng Gemini để trích xuất thông tin Tỉnh, Ngày và Số từ ảnh vé số.
-    --- CHÍNH SÁCH BẢO MẬT ---
-    - api_key được truyền từ client và chỉ tồn tại trong bộ nhớ (RAM) của tiến trình xử lý request.
-    - Server CAM KẾT không ghi log, không lưu trữ (no persistence) API Key của người dùng.
-    - Mỗi request sẽ cấu hình lại genai để đảm bảo tính độc lập (stateless).
     """
     if api_key:
         genai.configure(api_key=api_key)
     else:
-        genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+        # Fallback to env key
+        env_key = os.getenv("GEMINI_API_KEY")
+        if env_key: genai.configure(api_key=env_key)
 
     img = Image.open(io.BytesIO(image_bytes))
     
     prompt = f"""
-    ### QUY TẮC QUAN TRỌNG: TRÍCH XUẤT TỐI ĐA 3 TỜ VÉ SỐ ###
-    Bạn là một chuyên gia về vé số Việt Nam. Hãy quan sát ảnh và tìm tất cả các tờ vé số có trong ảnh.
+    ### NHIỆM VỤ: TRÍCH XUẤT THÔNG TIN VÉ SỐ VIỆT NAM ###
+    Bạn là một trợ lý AI chuyên nghiệp. Hãy phân tích ảnh và trích xuất thông tin của TỐI ĐA 3 tờ vé số rõ nhất.
     
-    HÃY THỰC HIỆN CÁC BƯỚC:
-    1. NHẬN DIỆN: Tìm tối đa 3 tờ vé số rõ nhất trong ảnh.
-    2. TRÍCH XUẤT THÔNG TIN cho TỪNG tờ vé:
-       - province: Tên tỉnh/thành phố (ví dụ: Bến Tre, Vũng Tàu...).
-       - date: Ngày mở thưởng (định dạng DD-MM-YYYY).
-       - number: Dãy số dự thưởng (chuỗi số, thường là 6 chữ số).
-    3. ĐỊNH DẠNG TRẢ VỀ: Một MẢNG các đối tượng JSON.
-
-    ĐỊNH DẠNG TRẢ VỀ MẪU:
+    YÊU CẦU DỮ LIỆU:
+    1. province: Tên tỉnh/thành phố (ví dụ: An Giang, Tiền Giang...).
+    2. date: Ngày mở thưởng (Định dạng: DD-MM-YYYY).
+    3. number: Dãy số dự thưởng (chuỗi số, thường là 6 chữ số).
+    
+    DANH SÁCH TỈNH HỢP LỆ: {list(PROVINCE_MAP.keys())[:30]}...
+    
+    MẪU TRẢ VỀ (JSON ARRAY):
     [
-      {{
-          "province": "Bến Tre",
-          "date": "24-12-2025",
-          "number": "123456"
-      }},
-      {{
-          "province": "Vũng Tàu",
-          "date": "24-12-2025",
-          "number": "654321"
-      }}
+      {{"province": "An Giang", "date": "25-12-2025", "number": "123456"}}
     ]
-
-    Tỉnh phải thuộc danh sách: {list(PROVINCE_MAP.keys())}
-    - Nếu chỉ thấy 1 vé, trả về mảng có 1 phần tử.
-    - Nếu không thấy vé nào, trả về mảng rỗng [].
-    - Đảm bảo "number" chỉ chứa các chữ số.
     
-    ### CHỈ TRẢ VỀ JSON ARRAY, KHÔNG GIẢI THÍCH, KHÔNG TEXT THỪA ###
+    CHỈ TRẢ VỀ JSON, KHÔNG GIẢI THÍCH GÌ THÊM.
     """
     
+    import json
     for model_name in MODELS_TO_TRY:
         try:
-            print(f"Đang thử trích xuất thông tin bằng model: {model_name}...")
+            print(f"Đang thử trích xuất bằng: {model_name}...")
             model = genai.GenerativeModel(model_name)
             response = model.generate_content([prompt, img])
+            text = response.text.strip()
+
+            # Robust JSON Extraction
+            # 1. Clean markdown
+            text = re.sub(r'```json\s*|```', '', text)
             
-            # Extract JSON Array using regex
-            match = re.search(r'\[.*\]', response.text, re.DOTALL)
-            if match:
-                import json
-                tickets = json.loads(match.group())
-                if isinstance(tickets, list) and len(tickets) > 0:
-                    print(f"Thành công với model: {model_name}. Tìm thấy {len(tickets)} vé.")
+            # 2. Find array or object using regex
+            match_array = re.search(r'\[\s*\{.*\}\s*\]', text, re.DOTALL)
+            match_obj = re.search(r'\{\s*".*"\s*:\s*".*"\s*\}', text, re.DOTALL)
+            
+            json_str = ""
+            if match_array:
+                json_str = match_array.group()
+            elif match_obj:
+                json_str = f"[{match_obj.group()}]"
+            
+            if json_str:
+                tickets = json.loads(json_str)
+                if isinstance(tickets, list):
+                    # Normalize dates in results
+                    for t in tickets:
+                        if 'date' in t:
+                            t['date'] = normalize_date(t['date'])
                     return tickets
-                elif isinstance(tickets, dict): # Fallback for single object
-                    return [tickets]
-            
-            # Second attempt if no array found but maybe a single object
-            match_obj = re.search(r'\{.*?\}', response.text, re.DOTALL)
-            if match_obj:
-                import json
-                info = json.loads(match_obj.group())
-                if info.get('number'):
-                    return [info]
-                    
-            print(f"Model {model_name} trả về kết quả không hợp lệ, thử model tiếp theo...")
+
         except Exception as e:
-            print(f"Lỗi khi sử dụng model {model_name}: {str(e)}")
+            print(f"Lỗi với model {model_name}: {str(e)}")
             continue
             
     return []
