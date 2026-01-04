@@ -1,7 +1,7 @@
 {
-  "name": "LotteryAI - Kiểm Tra Vé Số",
+  "name": "Dò Vé Số AI - Kiểm Tra Vé Số",
   "short_name": "Dò Vé Số AI",
-  "description": "Dò vé số thông minh với Gemini 2.5",
+  "description": "Dò vé số thông minh với Gemini AI",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0b14",

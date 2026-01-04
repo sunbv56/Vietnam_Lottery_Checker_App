@@ -4,55 +4,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kiểm Tra Vé Số Việt Nam - AI Edition</title>
+    <title>Dò Vé Số AI - Kiểm Tra Vé Số Thông Minh</title>
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#ff5e3a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2830/2830305.png">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/8610/8610944.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;600;800&display=swap');
 
         :root {
-            --bg-dark: #0a0b14;
-            --bg-light: #f8fafc;
             --accent-primary: #ff5e3a;
             --accent-secondary: #ff2a6d;
-            --glass-bg: rgba(255, 255, 255, 0.03);
-            --glass-border: rgba(255, 255, 255, 0.08);
-            --text-dark: #ffffff;
-            --text-light: #0f172a;
-            --text-muted: #94a3b8;
+            --transition-speed: 0.3s;
         }
 
-        @media (prefers-color-scheme: light) {
-            :root {
-                --bg-dark: var(--bg-light);
-                --glass-bg: rgba(0, 0, 0, 0.03);
-                --glass-border: rgba(0, 0, 0, 0.08);
-                --text-dark: var(--text-light);
-                --text-muted: #64748b;
-            }
+        /* --- Dark Theme (Default) --- */
+        [data-theme="dark"],
+        :root:not([data-theme]) {
+            --bg-main: #0a0b14;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;
+            --input-bg: rgba(255, 255, 255, 0.05);
+            --status-bar: #0a0b14;
+            --shadow-color: rgba(0, 0, 0, 0.8);
+            --bg-gradient:
+                radial-gradient(circle at 10% 20%, rgba(255, 94, 58, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(255, 42, 109, 0.05) 0%, transparent 40%);
+        }
 
-            body {
-                background-image:
-                    radial-gradient(circle at 10% 20%, rgba(255, 94, 58, 0.1) 0%, transparent 40%),
-                    radial-gradient(circle at 90% 80%, rgba(255, 42, 109, 0.1) 0%, transparent 40%) !important;
-            }
+        /* --- Light Theme --- */
+        [data-theme="light"] {
+            --bg-main: #f0f2f5;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(0, 0, 0, 0.1);
+            --text-main: #1a1a1b;
+            --text-muted: #64748b;
+            --input-bg: rgba(255, 255, 255, 0.8);
+            --status-bar: #f0f2f5;
+            --shadow-color: rgba(0, 0, 0, 0.06);
+            --bg-gradient:
+                radial-gradient(circle at 10% 20%, rgba(255, 94, 58, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(255, 42, 109, 0.15) 0%, transparent 40%);
+        }
+
+        /* --- Imperial Gold --- */
+        [data-theme="gold"] {
+            --bg-main: #120e06;
+            --accent-primary: #fbbf24;
+            --accent-secondary: #d97706;
+            --glass-bg: rgba(251, 191, 36, 0.05);
+            --glass-border: rgba(251, 191, 36, 0.15);
+            --text-main: #fef3c7;
+            --text-muted: #b45309;
+            --input-bg: rgba(251, 191, 36, 0.1);
+            --status-bar: #120e06;
+            --shadow-color: rgba(0, 0, 0, 0.8);
+            --bg-gradient:
+                radial-gradient(circle at 10% 20%, rgba(251, 191, 36, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(217, 119, 6, 0.08) 0%, transparent 40%);
+        }
+
+        /* --- Cyberpunk Theme --- */
+        [data-theme="cyberpunk"] {
+            --bg-main: #050505;
+            --accent-primary: #00ffcc;
+            --accent-secondary: #ff00ff;
+            --glass-bg: rgba(0, 255, 204, 0.03);
+            --glass-border: rgba(255, 0, 255, 0.2);
+            --text-main: #ffffff;
+            --text-muted: #00ffcc;
+            --input-bg: rgba(255, 0, 255, 0.05);
+            --status-bar: #050505;
+            --shadow-color: rgba(0, 0, 255, 0.5);
+            --bg-gradient:
+                radial-gradient(circle at 10% 20%, rgba(0, 255, 204, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(255, 0, 255, 0.1) 0%, transparent 40%);
         }
 
         body {
-            font-family: 'Outfit', sans-serif;
-            background-color: var(--bg-dark);
-            background-image:
-                radial-gradient(circle at 10% 20%, rgba(255, 94, 58, 0.05) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(255, 42, 109, 0.05) 0%, transparent 40%);
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: var(--bg-main);
+            background-image: var(--bg-gradient);
             min-height: 100vh;
-            color: var(--text-dark);
+            color: var(--text-main);
             overflow-x: hidden;
-            transition: background-color 0.5s ease, color 0.5s ease;
+            transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
         }
 
         .premium-glass {
@@ -60,7 +101,7 @@
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            box-shadow: 0 10px 40px 0 var(--shadow-color);
         }
 
         .gradient-text {
@@ -147,7 +188,8 @@
 
         .history-card:hover {
             transform: translateX(5px);
-            background: rgba(255, 255, 255, 0.06);
+            background: var(--glass-bg);
+            border-color: var(--glass-border);
         }
 
         .modal {
@@ -172,7 +214,8 @@
         /* Premium Popup Styles */
         .win-glow {
             animation: win-glow-pulse 2s infinite;
-            text-shadow: 0 0 20px rgba(74, 222, 128, 0.5);
+            text-shadow: 0 0 20px var(--accent-primary);
+            opacity: 0.95;
         }
 
         @keyframes win-glow-pulse {
@@ -190,8 +233,8 @@
         }
 
         .prize-badge {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: var(--input-bg);
+            border: 1px solid var(--glass-border);
             padding: 4px 12px;
             border-radius: 99px;
             font-size: 10px;
@@ -214,10 +257,11 @@
         }
 
         .modal-content-glass {
-            background: rgba(10, 11, 20, 0.95);
+            background: var(--bg-main);
             backdrop-filter: blur(40px);
             -webkit-backdrop-filter: blur(40px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
+            opacity: 0.98;
         }
 
         @media (max-width: 768px) {
@@ -386,12 +430,12 @@
             <header class="flex justify-between items-center animate-fade-in">
                 <div>
                     <h1 class="text-4xl font-extrabold tracking-tight">
-                        <span class="gradient-text">Lottery</span>AI
+                        <span class="gradient-text">Dò Vé Số AI</span>
                     </h1>
-                    <p class="text-slate-400 text-sm mt-1">Dò vé số thông minh với Gemini 2.5</p>
+                    <p class="text-[var(--text-muted)] text-sm mt-1">Dò vé số thông minh với Gemini AI</p>
                 </div>
                 <button id="open-settings"
-                    class="w-10 h-10 rounded-full premium-glass flex items-center justify-center text-slate-400 hover:text-white transition-colors">
+                    class="w-10 h-10 rounded-full premium-glass flex items-center justify-center text-[var(--text-muted)] hover:text-white transition-colors">
                     <i class="fas fa-cog"></i>
                 </button>
             </header>
@@ -399,7 +443,7 @@
             <main class="space-y-6">
                 <!-- Action Area -->
                 <div id="drop-zone"
-                    class="premium-glass rounded-3xl p-10 text-center border-2 border-dashed border-white/10 cursor-pointer animate-fade-in"
+                    class="premium-glass rounded-3xl p-10 text-center border-2 border-dashed border-[var(--glass-border)] cursor-pointer animate-fade-in"
                     style="animation-delay: 0.1s">
                     <div id="upload-ui">
                         <div
@@ -407,8 +451,10 @@
                             <i class="fas fa-cloud-upload-alt text-4xl"></i>
                         </div>
                         <h2 class="text-xl font-bold mb-2">Quét vé số của bạn</h2>
-                        <p class="text-slate-400 text-sm">Kéo thả ảnh vào vùng này hoặc bấm trực tiếp để tải lên</p>
-                        <p class="text-[11px] text-slate-500 mt-2 mb-8 uppercase tracking-widest font-bold">Hỗ trợ JPG,
+                        <p class="text-[var(--text-muted)] text-sm">Kéo thả ảnh vào vùng này hoặc bấm trực tiếp để tải
+                            lên</p>
+                        <p class="text-[11px] text-[var(--text-muted)] mt-2 mb-8 uppercase tracking-widest font-bold">Hỗ
+                            trợ JPG,
                             PNG, WEBP & HEIC</p>
 
                         <div class="flex justify-center">
@@ -430,7 +476,7 @@
                         <div id="loading" class="flex flex-col items-center py-8">
                             <div class="loader mb-4"></div>
                             <h3 class="font-bold text-lg">Đang phân tích dữ liệu...</h3>
-                            <p class="text-slate-400 text-sm">Gemini AI đang nhận diện số và tỉnh thành</p>
+                            <p class="text-[var(--text-muted)] text-sm">Gemini AI đang nhận diện số và tỉnh thành</p>
                         </div>
 
                         <div id="results-data" class="hidden space-y-8">
@@ -443,21 +489,27 @@
                             </div>
 
                             <div class="grid grid-cols-2 gap-4">
-                                <div class="premium-glass p-4 rounded-2xl bg-white/[0.02]">
-                                    <p class="text-slate-400 text-[10px] uppercase tracking-widest font-bold mb-1">Tỉnh
+                                <div class="premium-glass p-4 rounded-2xl bg-[var(--input-bg)]">
+                                    <p
+                                        class="text-[var(--text-muted)] text-[10px] uppercase tracking-widest font-bold mb-1">
+                                        Tỉnh
                                         Thành</p>
                                     <p id="res-province" class="text-orange-400 font-bold truncate outline-none">---</p>
                                 </div>
-                                <div class="premium-glass p-4 rounded-2xl bg-white/[0.02]">
-                                    <p class="text-slate-400 text-[10px] uppercase tracking-widest font-bold mb-1">Ngày
+                                <div class="premium-glass p-4 rounded-2xl bg-[var(--input-bg)]">
+                                    <p
+                                        class="text-[var(--text-muted)] text-[10px] uppercase tracking-widest font-bold mb-1">
+                                        Ngày
                                         Mở</p>
                                     <p id="res-date" class="text-orange-400 font-bold outline-none">--/--/----</p>
                                 </div>
-                                <div class="col-span-2 premium-glass p-6 rounded-2xl text-center bg-white/[0.04]">
-                                    <p class="text-slate-400 text-[10px] uppercase tracking-widest font-bold mb-2">Số
+                                <div class="col-span-2 premium-glass p-6 rounded-2xl text-center bg-[var(--input-bg)]">
+                                    <p
+                                        class="text-[var(--text-muted)] text-[10px] uppercase tracking-widest font-bold mb-2">
+                                        Số
                                         Của Bạn</p>
                                     <p id="res-number"
-                                        class="text-4xl md:text-5xl font-black tracking-[0.15em] md:tracking-[0.2em] text-white outline-none">
+                                        class="text-4xl md:text-5xl font-black tracking-[0.15em] md:tracking-[0.2em] text-[var(--text-main)] outline-none">
                                         ------
                                     </p>
                                 </div>
@@ -472,14 +524,15 @@
                                     class="w-full gradient-bg py-4 rounded-2xl font-bold btn-hover uppercase tracking-widest text-sm shadow-lg shadow-orange-500/20">
                                     <i class="fas fa-sync-alt mr-2"></i>Lưu & Kiểm tra lại
                                 </button>
-                                <p class="text-center text-[10px] text-slate-500 mt-2 italic">Dữ liệu sẽ được đối chiếu
+                                <p class="text-center text-[10px] text-[var(--text-muted)] mt-2 italic">Dữ liệu sẽ được
+                                    đối chiếu
                                     lại với nhà đài</p>
                             </div>
 
                             <div id="win-status"></div>
 
                             <button id="scan-new-btn" onclick="resetUI()"
-                                class="w-full bg-white/5 hover:bg-white/10 py-4 rounded-2xl font-bold transition-all border border-white/10 uppercase tracking-widest text-sm">
+                                class="w-full bg-[var(--input-bg)] hover:bg-[var(--input-bg)] py-4 rounded-2xl font-bold transition-all border border-[var(--glass-border)] uppercase tracking-widest text-sm">
                                 <i class="fas fa-redo-alt mr-2 opacity-50"></i>Quét vé khác
                             </button>
                         </div>
@@ -501,7 +554,7 @@
                     </div>
 
                     <h3 id="error-title" class="text-xl font-bold mb-2">Oops! Có lỗi rồi</h3>
-                    <p id="error-msg" class="text-slate-400 text-sm mb-6 leading-relaxed"></p>
+                    <p id="error-msg" class="text-[var(--text-muted)] text-sm mb-6 leading-relaxed"></p>
 
                     <div class="flex justify-center">
                         <button id="error-action-btn" onclick="resetUI()"
@@ -517,22 +570,26 @@
         <div class="space-y-6 animate-fade-in" style="animation-delay: 0.2s">
             <!-- Statistics Card -->
             <div id="stats-container"
-                class="premium-glass rounded-3xl p-6 border-white/10 bg-gradient-to-br from-orange-500/5 to-pink-500/5">
+                class="premium-glass rounded-3xl p-6 border-[var(--glass-border)] bg-gradient-to-br from-orange-500/5 to-pink-500/5">
                 <h3 class="text-lg font-bold mb-4 flex items-center">
                     <i class="fas fa-chart-line mr-2 text-orange-500"></i>Thống kê & Tài chính
                 </h3>
                 <div class="grid grid-cols-1 gap-4">
-                    <div class="flex justify-between items-center p-3 rounded-xl bg-white/5 border border-white/5">
-                        <span class="text-xs text-slate-400 font-bold uppercase tracking-wider">Tổng tiền trúng</span>
+                    <div
+                        class="flex justify-between items-center p-3 rounded-xl bg-[var(--input-bg)] border border-[var(--glass-border)]">
+                        <span class="text-xs text-[var(--text-muted)] font-bold uppercase tracking-wider">Tổng tiền
+                            trúng</span>
                         <span id="stat-total-win" class="text-xl font-black text-green-400">0đ</span>
                     </div>
                     <div class="grid grid-cols-2 gap-3">
-                        <div class="p-3 rounded-xl bg-white/5 border border-white/5 text-center">
-                            <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Đã quét</p>
+                        <div
+                            class="p-3 rounded-xl bg-[var(--input-bg)] border border-[var(--glass-border)] text-center">
+                            <p class="text-[10px] text-[var(--text-muted)] font-bold uppercase mb-1">Đã quét</p>
                             <p id="stat-scanned" class="text-xl font-black">0</p>
                         </div>
-                        <div class="p-3 rounded-xl bg-white/5 border border-white/5 text-center">
-                            <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Số lần trúng</p>
+                        <div
+                            class="p-3 rounded-xl bg-[var(--input-bg)] border border-[var(--glass-border)] text-center">
+                            <p class="text-[10px] text-[var(--text-muted)] font-bold uppercase mb-1">Số lần trúng</p>
                             <p id="stat-lucky" class="text-xl font-black text-orange-400">0</p>
                         </div>
                     </div>
@@ -541,10 +598,10 @@
 
             <div class="flex items-center justify-between mb-2">
                 <h3 class="text-lg font-bold flex items-center">
-                    <i class="fas fa-history mr-2 text-slate-500"></i>Lịch sử quét
+                    <i class="fas fa-history mr-2 text-[var(--text-muted)]"></i>Lịch sử quét
                 </h3>
                 <button onclick="clearHistory()"
-                    class="text-[10px] uppercase font-bold text-slate-500 hover:text-red-400 transition-colors">
+                    class="text-[10px] uppercase font-bold text-[var(--text-muted)] hover:text-red-400 transition-colors">
                     Xóa tất cả
                 </button>
             </div>
@@ -561,8 +618,9 @@
 
     <!-- Settings Modal -->
     <div id="settings-modal" class="modal items-center justify-center">
-        <div class="premium-glass rounded-[2rem] p-8 w-full max-w-md m-4 border-white/20 relative shadow-2xl">
-            <button id="close-settings" class="absolute top-6 right-6 text-slate-400 hover:text-white">
+        <div
+            class="premium-glass rounded-[2rem] p-8 w-full max-w-md m-4 border-[var(--glass-border)] relative shadow-2xl">
+            <button id="close-settings" class="absolute top-6 right-6 text-[var(--text-muted)] hover:text-white">
                 <i class="fas fa-times"></i>
             </button>
 
@@ -570,10 +628,34 @@
 
             <div class="space-y-6">
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Gemini API Key
+                    <label class="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-3">Giao
+                        diện ứng
+                        dụng</label>
+                    <div class="relative group">
+                        <select id="theme-select"
+                            class="w-full bg-[var(--input-bg)] border border-[var(--glass-border)] rounded-2xl px-5 py-4 focus:outline-none focus:border-orange-500 appearance-none cursor-pointer transition-all hover:bg-[var(--input-bg)] text-[var(--text-main)]">
+                            <option value="auto" class="bg-[var(--bg-main)] text-[var(--text-main)]">Mặc định hệ thống
+                            </option>
+                            <option value="light" class="bg-[var(--bg-main)] text-[var(--text-main)]">Giao diện sáng
+                            </option>
+                            <option value="dark" class="bg-[var(--bg-main)] text-[var(--text-main)]">Giao diện tối
+                            </option>
+                            <option value="gold" class="bg-[var(--bg-main)] text-[var(--text-main)]">Imperial Gold
+                                (Premium)</option>
+                            <option value="cyberpunk" class="bg-[var(--bg-main)] text-[var(--text-main)]">Cyberpunk Neon
+                            </option>
+                        </select>
+                        <i
+                            class="fas fa-chevron-down absolute right-5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none transition-transform group-hover:text-orange-500"></i>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-3">Gemini
+                        API Key
                         (Cá nhân)</label>
                     <input type="password" id="api-key-input" placeholder="Dán API key tại đây..."
-                        class="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-orange-500 transition-all">
+                        class="w-full bg-[var(--input-bg)] border border-[var(--glass-border)] rounded-2xl px-5 py-4 focus:outline-none focus:border-orange-500 transition-all text-[var(--text-main)]">
                 </div>
 
                 <div class="p-4 rounded-2xl bg-orange-500/10 border border-orange-500/20">
@@ -601,10 +683,10 @@
     <div id="results-modal" class="modal items-center justify-center">
         <canvas id="confetti-canvas" class="confetti-canvas"></canvas>
         <div
-            class="modal-content-glass rounded-[2.5rem] p-6 md:p-12 w-full max-w-3xl m-4 border-white/20 relative shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar animate-fade-in">
+            class="modal-content-glass rounded-[2.5rem] p-6 md:p-12 w-full max-w-3xl m-4 border-[var(--glass-border)] relative shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar animate-fade-in">
             <div class="mobile-handle"></div>
             <button id="close-results"
-                class="absolute top-4 right-4 md:top-8 md:right-8 text-slate-400 hover:text-white z-10 p-2 transition-transform hover:scale-110">
+                class="absolute top-4 right-4 md:top-8 md:right-8 text-[var(--text-muted)] hover:text-white z-10 p-2 transition-transform hover:scale-110">
                 <i class="fas fa-times text-xl md:text-2xl"></i>
             </button>
 
@@ -613,8 +695,9 @@
                     <div class="inline-block p-3 rounded-full bg-yellow-500/10 mb-3 win-glow">
                         <i class="fas fa-trophy text-3xl md:text-4xl text-yellow-500/80"></i>
                     </div>
-                    <h2 class="text-2xl md:text-3xl font-bold text-white/90 mb-1 italic">CHÚC MỪNG BẠN!</h2>
-                    <p class="text-slate-500 uppercase tracking-[0.2em] text-[9px] md:text-[10px] font-bold">Bạn đã
+                    <h2 class="text-2xl md:text-3xl font-bold text-[var(--text-main)] mb-1 italic">CHÚC MỪNG BẠN!</h2>
+                    <p class="text-[var(--text-muted)] uppercase tracking-[0.2em] text-[9px] md:text-[10px] font-bold">
+                        Bạn đã
                         trúng giải</p>
                 </div>
 
@@ -628,51 +711,59 @@
                     <div class="inline-block p-4 rounded-full bg-slate-500/10 mb-4">
                         <i class="fas fa-heart text-4xl md:text-5xl text-pink-500/50"></i>
                     </div>
-                    <h2 class="text-2xl md:text-3xl font-bold text-white mb-2">Hẹn Bạn Lần Sau</h2>
-                    <p class="text-slate-400 uppercase tracking-widest text-[10px] md:text-xs font-bold">Không trúng
+                    <h2 class="text-2xl md:text-3xl font-bold text-[var(--text-main)] mb-2">Hẹn Bạn Lần Sau</h2>
+                    <p class="text-[var(--text-muted)] uppercase tracking-widest text-[10px] md:text-xs font-bold">Không
+                        trúng
                         giải kỳ này</p>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
-                <div class="premium-glass p-5 rounded-3xl bg-white/[0.03] border-white/10 flex items-center gap-4">
+                <div
+                    class="premium-glass p-5 rounded-3xl bg-[var(--input-bg)] border-[var(--glass-border)] flex items-center gap-4">
                     <div
                         class="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-500">
                         <i class="fas fa-map-marker-alt"></i>
                     </div>
                     <div>
-                        <p class="text-slate-500 text-[10px] uppercase font-bold tracking-tighter">Tỉnh Thành</p>
-                        <p id="modal-res-province" class="text-white font-bold text-lg">---</p>
+                        <p class="text-[var(--text-muted)] text-[10px] uppercase font-bold tracking-tighter">Tỉnh Thành
+                        </p>
+                        <p id="modal-res-province" class="text-[var(--text-main)] font-bold text-lg">---</p>
                     </div>
                 </div>
-                <div class="premium-glass p-5 rounded-3xl bg-white/[0.03] border-white/10 flex items-center gap-4">
+                <div
+                    class="premium-glass p-5 rounded-3xl bg-[var(--input-bg)] border-[var(--glass-border)] flex items-center gap-4">
                     <div class="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500">
                         <i class="fas fa-calendar-alt"></i>
                     </div>
                     <div>
-                        <p class="text-slate-500 text-[10px] uppercase font-bold tracking-tighter">Ngày Mở Thưởng</p>
-                        <p id="modal-res-date" class="text-white font-bold text-lg">--/--/----</p>
+                        <p class="text-[var(--text-muted)] text-[10px] uppercase font-bold tracking-tighter">Ngày Mở
+                            Thưởng</p>
+                        <p id="modal-res-date" class="text-[var(--text-main)] font-bold text-lg">--/--/----</p>
                     </div>
                 </div>
                 <div
-                    class="md:col-span-2 premium-glass p-5 md:p-6 rounded-2xl md:rounded-3xl text-center bg-white/[0.03] border-white/5 relative overflow-hidden group">
-                    <p class="text-slate-500 text-[10px] uppercase font-bold tracking-[0.2em] mb-2">Số Của Bạn</p>
-                    <p id="modal-res-number" class="text-3xl md:text-4xl font-black tracking-[0.1em] text-white">------
+                    class="md:col-span-2 premium-glass p-5 md:p-6 rounded-2xl md:rounded-3xl text-center bg-[var(--input-bg)] border-[var(--glass-border)] relative overflow-hidden group">
+                    <p class="text-[var(--text-muted)] text-[10px] uppercase font-bold tracking-[0.2em] mb-2">Số Của Bạn
+                    </p>
+                    <p id="modal-res-number"
+                        class="text-3xl md:text-4xl font-black tracking-[0.1em] text-[var(--text-main)]">------
                     </p>
                 </div>
             </div>
 
             <div class="space-y-4">
                 <div class="flex items-center justify-between px-2">
-                    <h3 class="text-xs font-bold uppercase text-slate-500 tracking-widest">Chi tiết kết quả nhà đài</h3>
-                    <div class="h-px bg-white/10 flex-grow ml-4"></div>
+                    <h3 class="text-xs font-bold uppercase text-[var(--text-muted)] tracking-widest">Chi tiết kết quả
+                        nhà đài</h3>
+                    <div class="h-px bg-[var(--input-bg)] flex-grow ml-4"></div>
                 </div>
                 <div id="modal-results-table-container"></div>
             </div>
 
             <div class="mt-8 md:mt-12 flex flex-col sm:flex-row gap-3 md:gap-4">
                 <button id="close-results-btn"
-                    class="flex-grow bg-white/10 py-4 md:py-5 rounded-2xl md:rounded-[1.5rem] font-bold hover:bg-white/20 transition-all uppercase tracking-widest text-xs md:text-sm border border-white/10">
+                    class="flex-grow bg-[var(--input-bg)] py-4 md:py-5 rounded-2xl md:rounded-[1.5rem] font-bold hover:bg-white/20 transition-all uppercase tracking-widest text-xs md:text-sm border border-[var(--glass-border)]">
                     <span>Đã hiểu</span>
                 </button>
                 <button id="share-win-btn" onclick="downloadWinImage()"
@@ -694,20 +785,22 @@
             <div class="camera-controls-container">
                 <div class="flex justify-center items-center gap-10 md:gap-14">
                     <button id="flip-camera"
-                        class="w-14 h-14 rounded-full premium-glass text-white/40 hover:text-white transition-all flex items-center justify-center text-xl hover:bg-white/10">
+                        class="w-14 h-14 rounded-full premium-glass text-white/40 hover:text-white transition-all flex items-center justify-center text-xl hover:bg-[var(--input-bg)]">
                         <i class="fas fa-sync-alt"></i>
                     </button>
-                    <button id="capture-btn" class="w-24 h-24 rounded-full border-4 border-white/10 p-1 group relative">
+                    <button id="capture-btn"
+                        class="w-24 h-24 rounded-full border-4 border-[var(--glass-border)] p-1 group relative">
                         <div
                             class="w-full h-full bg-white rounded-full group-hover:scale-90 transition-transform flex items-center justify-center text-black shadow-[0_0_20px_rgba(255,255,255,0.3)]">
                             <div class="w-16 h-16 rounded-full border border-black/10 flex items-center justify-center">
                                 <i class="fas fa-camera text-2xl"></i>
                             </div>
                         </div>
-                        <div class="absolute -inset-2 border border-white/5 rounded-full animate-pulse"></div>
+                        <div class="absolute -inset-2 border border-[var(--glass-border)] rounded-full animate-pulse">
+                        </div>
                     </button>
                     <button id="close-camera"
-                        class="w-14 h-14 rounded-full premium-glass text-white/40 hover:text-red-400 transition-all flex items-center justify-center text-xl hover:bg-white/10">
+                        class="w-14 h-14 rounded-full premium-glass text-white/40 hover:text-red-400 transition-all flex items-center justify-center text-xl hover:bg-[var(--input-bg)]">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
@@ -722,6 +815,51 @@
     </div>
 
     <script>
+        // --- Theme Management ---
+        const themeSelect = document.getElementById('theme-select');
+        const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+
+        function applyTheme(theme) {
+            const root = document.documentElement;
+            const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            let targetTheme = theme;
+            if (theme === 'auto') {
+                targetTheme = systemDark ? 'dark' : 'light';
+            }
+
+            root.setAttribute('data-theme', targetTheme);
+
+            // Update Meta Theme Color for mobile status bars
+            const statusBarColor = getComputedStyle(root).getPropertyValue('--status-bar').trim();
+            if (themeColorMeta) themeColorMeta.setAttribute('content', statusBarColor);
+
+            // Update Apple status bar style
+            const appleStatusMeta = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+            if (appleStatusMeta) {
+                appleStatusMeta.setAttribute('content', targetTheme === 'light' ? 'default' : 'black-translucent');
+            }
+        }
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem('app_theme') || 'auto';
+            if (themeSelect) {
+                themeSelect.value = savedTheme;
+                themeSelect.addEventListener('change', (e) => applyTheme(e.target.value));
+            }
+            applyTheme(savedTheme);
+        }
+
+        // Listen for system theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+            if (localStorage.getItem('app_theme') === 'auto' || !localStorage.getItem('app_theme')) {
+                applyTheme('auto');
+            }
+        });
+
+        // Immediate initialization to prevent flash
+        initTheme();
+
         // DOM Elements
         const dropZone = document.getElementById('drop-zone');
         const fileInput = document.getElementById('file-input');
@@ -742,6 +880,12 @@
         let isMirrored = false;
         let videoTrack = null;
         let isEditMode = false;
+
+        function formatProvinceName(name) {
+            if (!name) return '---';
+            let cleanName = name.trim().replace(/tp\.\s*/gi, '');
+            return cleanName.toLowerCase().split(/\s+/).filter(w => w).map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+        }
 
         // --- History Logic ---
         function saveToHistory(data) {
@@ -771,17 +915,17 @@
             emptyHistory.style.display = 'none';
 
             historyList.innerHTML = history.map(item => `
-                <div class="premium-glass p-4 rounded-2xl history-card cursor-pointer bg-white/[0.02] border-white/5" onclick="reShow(${JSON.stringify(item).replace(/"/g, '&quot;')})">
+                <div class="premium-glass p-4 rounded-2xl history-card cursor-pointer bg-[var(--input-bg)] border-[var(--glass-border)]" onclick="reShow(${JSON.stringify(item).replace(/"/g, '&quot;')})">
                     <div class="flex justify-between items-start mb-2">
-                        <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500">${item.timestamp}</span>
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">${item.timestamp}</span>
                         ${item.isWin ? '<span class="px-2 py-0.5 bg-green-500/20 text-green-400 text-[9px] font-bold rounded uppercase">Trúng giải</span>' : ''}
                     </div>
                     <div class="flex justify-between items-center">
                         <div>
-                            <p class="font-bold text-sm text-slate-200">${item.info.province}</p>
-                            <p class="text-xs text-slate-500">${item.info.date}</p>
+                            <p class="font-bold text-sm text-[var(--text-main)]">${formatProvinceName(item.info.province)}</p>
+                            <p class="text-xs text-[var(--text-muted)]">${item.info.date}</p>
                         </div>
-                        <p class="text-lg font-black tracking-widest ${item.isWin ? 'text-green-400' : 'text-slate-300'}">${item.info.number}</p>
+                        <p class="text-lg font-black tracking-widest ${item.isWin ? 'text-green-400' : 'text-[var(--text-main)]'}">${item.info.number}</p>
                     </div>
                 </div>
             `).join('');
@@ -799,7 +943,7 @@
             currentIndex = 0;
 
             renderNavigation(); // Ensure nav is hidden/updated for single item
-            showResults(item, true); // Force auto-open modal for history
+            showResults(item, true); // showResults will handle history pushing and auto-opening modal
         }
 
         function clearHistory() {
@@ -822,9 +966,9 @@
                 const el = document.getElementById(id);
                 el.contentEditable = isEditMode;
                 if (isEditMode) {
-                    el.classList.add('bg-white/10', 'rounded', 'px-2', 'py-1', 'border', 'border-white/20');
+                    el.classList.add('bg-[var(--input-bg)]', 'rounded', 'px-2', 'py-1', 'border', 'border-[var(--glass-border)]');
                 } else {
-                    el.classList.remove('bg-white/10', 'rounded', 'px-2', 'py-1', 'border', 'border-white/20');
+                    el.classList.remove('bg-[var(--input-bg)]', 'rounded', 'px-2', 'py-1', 'border', 'border-[var(--glass-border)]');
                 }
             });
 
@@ -903,8 +1047,7 @@
                 });
                 video.srcObject = stream;
                 videoTrack = stream.getVideoTracks()[0];
-                cameraUI.classList.remove('hidden');
-                cameraUI.style.display = 'flex';
+                openModal(cameraUI);
             } catch (err) {
                 alert('Lỗi camera: ' + err.message);
             }
@@ -912,7 +1055,7 @@
 
         document.getElementById('close-camera').addEventListener('click', (e) => {
             e.stopPropagation();
-            stopCamera();
+            closeModal(cameraUI);
         });
 
         flipBtn.addEventListener('click', (e) => {
@@ -1145,13 +1288,13 @@
 
             navContainer.classList.remove('hidden');
             navContainer.innerHTML = `
-                <button onclick="prevTicket()" class="w-10 h-10 rounded-full premium-glass flex items-center justify-center text-slate-400 hover:text-white transition-all ${currentIndex === 0 ? 'opacity-30 pointer-events-none' : ''}">
+                <button onclick="prevTicket()" class="w-10 h-10 rounded-full premium-glass flex items-center justify-center text-[var(--text-muted)] hover:text-white transition-all ${currentIndex === 0 ? 'opacity-30 pointer-events-none' : ''}">
                     <i class="fas fa-chevron-left"></i>
                 </button>
                 <div class="flex gap-2">
                     ${currentBatch.map((_, i) => `<div class="w-2 h-2 rounded-full transition-all ${i === currentIndex ? 'bg-orange-500 w-6' : 'bg-white/20'}"></div>`).join('')}
                 </div>
-                <button onclick="nextTicket()" class="w-10 h-10 rounded-full premium-glass flex items-center justify-center text-slate-400 hover:text-white transition-all ${currentIndex === currentBatch.length - 1 ? 'opacity-30 pointer-events-none' : ''}">
+                <button onclick="nextTicket()" class="w-10 h-10 rounded-full premium-glass flex items-center justify-center text-[var(--text-muted)] hover:text-white transition-all ${currentIndex === currentBatch.length - 1 ? 'opacity-30 pointer-events-none' : ''}">
                     <i class="fas fa-chevron-right"></i>
                 </button>
             `;
@@ -1172,6 +1315,11 @@
         }
 
         function showResults(data, autoOpen = false) {
+            // Push RESULTS_STATE if we are in the base/home state (null)
+            if (window.history.state === null) {
+                window.history.pushState(RESULTS_STATE, '');
+            }
+
             // Reset edit mode if it was on
             if (isEditMode) toggleEditMode();
 
@@ -1180,12 +1328,12 @@
             resultsData.classList.remove('hidden');
 
             // Main UI
-            document.getElementById('res-province').textContent = data.info.province;
+            document.getElementById('res-province').textContent = formatProvinceName(data.info.province);
             document.getElementById('res-date').textContent = data.info.date;
             document.getElementById('res-number').textContent = data.info.number;
 
             // Modal UI
-            document.getElementById('modal-res-province').textContent = data.info.province;
+            document.getElementById('modal-res-province').textContent = formatProvinceName(data.info.province);
             document.getElementById('modal-res-date').textContent = data.info.date;
             document.getElementById('modal-res-number').textContent = data.info.number;
             renderResultsTable(data.results, 'results-table-container');
@@ -1216,7 +1364,7 @@
                         <div class="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-6 rounded-2xl text-center shadow-lg mb-4">
                             <i class="fas fa-trophy text-3xl mb-2 block"></i>
                             <h4 class="font-extrabold text-xl uppercase">${detail.name}</h4>
-                            <p class="text-3xl font-black mt-1">${val}</p>
+                            <p class="text-3xl font-black mt-1 text-white">${val}</p>
                         </div>
                     `;
 
@@ -1225,10 +1373,10 @@
                         <div class="premium-glass p-6 md:p-8 rounded-[2rem] bg-gradient-to-br from-green-500/20 to-emerald-500/5 border-green-500/30 text-center relative overflow-hidden shadow-2xl flex flex-col items-center justify-center min-h-[160px] md:min-h-[200px]">
                             <div class="prize-badge mb-4 md:mb-6 ${detail.name.includes('Đặc Biệt') ? 'gold-glow' : 'silver-glow'}">
                                 <i class="fas fa-star text-[10px]"></i>
-                                <span class="text-[10px] md:text-[12px]">${detail.name}</span>
+                                <span class="text-[10px] md:text-[12px] opacity-80">${detail.name}</span>
                             </div>
-                            <p class="text-3xl md:text-5xl lg:text-7xl font-black text-white win-glow mb-2 md:mb-4 tracking-tight uppercase leading-none break-words w-full">${val}</p>
-                            ${isBigWin ? '<p class="text-green-400 text-[10px] md:text-[12px] font-bold uppercase tracking-[0.2em] mt-2 animate-pulse">JACKPOT WINNER!</p>' : ''}
+                            <p class="text-3xl md:text-5xl lg:text-7xl font-black text-[var(--text-main)] win-glow mb-2 md:mb-4 tracking-tight uppercase leading-none break-words w-full">${val}</p>
+                            ${isBigWin ? '<p class="text-green-500 text-[10px] md:text-[12px] font-bold uppercase tracking-[0.2em] mt-2 animate-pulse">JACKPOT WINNER!</p>' : ''}
                         </div>
                     `;
                 });
@@ -1245,11 +1393,11 @@
                 document.getElementById('share-win-btn').classList.add('hidden');
 
                 winHtml = `
-                    <div class="premium-glass p-6 rounded-2xl text-center border-white/5 bg-white/[0.02]">
-                        <i class="fas fa-heart text-pink-500 mb-2 block"></i>
-                        <p class="font-bold text-slate-400">Không trúng giải - Chúc bạn may mắn lần sau!</p>
-                    </div>
-                `;
+                        <div class="premium-glass p-6 rounded-2xl text-center border-[var(--glass-border)] bg-[var(--input-bg)]">
+                            <i class="fas fa-heart text-pink-500 mb-2 block"></i>
+                            <p class="font-bold text-[var(--text-muted)]">Không trúng giải - Chúc bạn may mắn lần sau!</p>
+                        </div>
+                    `;
                 playSound('no_win');
             }
 
@@ -1257,7 +1405,7 @@
 
             // Only auto-open modal if explicitly requested (history) or ONLY one ticket in batch
             if (autoOpen || (currentBatch && currentBatch.length === 1)) {
-                resultsModal.style.display = 'flex';
+                openModal(resultsModal);
             }
         }
 
@@ -1436,7 +1584,7 @@
             // 2.5 Background Watermark
             ctx.save();
             ctx.globalAlpha = theme.id === 'grand' ? 0.08 : 0.05;
-            ctx.font = '280px Outfit, sans-serif';
+            ctx.font = '280px Be Vietnam Pro, sans-serif';
             ctx.textAlign = 'center';
             ctx.fillStyle = theme.primary;
             ctx.fillText('🏆', 600, 420);
@@ -1533,11 +1681,11 @@
             logoGrad.addColorStop(0, theme.primary);
             logoGrad.addColorStop(1, theme.accent || theme.primary);
             ctx.fillStyle = logoGrad;
-            ctx.font = '800 32px Outfit, sans-serif';
+            ctx.font = '800 32px Be Vietnam Pro, sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText('LOTTERY AI', 600, 60);
+            ctx.fillText('DÒ VÉ SỐ AI', 600, 60);
 
-            ctx.font = '700 12px Outfit, sans-serif';
+            ctx.font = '700 12px Be Vietnam Pro, sans-serif';
             ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
             ctx.fillText('OFFICIAL VERIFIED RESULT', 600, 85);
 
@@ -1545,7 +1693,7 @@
             const prizeLabel = detail.name.toUpperCase();
 
             // Prize Name Badge
-            ctx.font = '800 18px Outfit, sans-serif';
+            ctx.font = '800 18px Be Vietnam Pro, sans-serif';
             const textWidth = ctx.measureText(prizeLabel).width;
             const badgeW = textWidth + 40;
             const badgeH = 34;
@@ -1580,12 +1728,12 @@
             ctx.shadowColor = theme.id === 'grand' ? 'rgba(251, 191, 36, 0.6)' : theme.id === 'major' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 94, 58, 0.5)';
             ctx.shadowBlur = 40;
             ctx.fillStyle = theme.text;
-            ctx.font = '900 110px Outfit, sans-serif';
+            ctx.font = '900 110px Be Vietnam Pro, sans-serif';
             ctx.fillText(valStr, 600, cardY + 220);
             ctx.shadowBlur = 0;
 
             // Congratulation Text
-            ctx.font = '600 24px Outfit, sans-serif';
+            ctx.font = '600 24px Be Vietnam Pro, sans-serif';
             ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
             ctx.fillText('CHÚC MỪNG BẠN ĐÃ TRÚNG GIẢI!', 600, cardY + 280);
 
@@ -1599,16 +1747,16 @@
 
             const drawInfo = (label, value, x) => {
                 ctx.textAlign = 'center';
-                ctx.font = '800 12px Outfit, sans-serif';
+                ctx.font = '800 12px Be Vietnam Pro, sans-serif';
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
                 ctx.fillText(label, x, infoY);
-                ctx.font = '700 24px Outfit, sans-serif';
+                ctx.font = '700 24px Be Vietnam Pro, sans-serif';
                 ctx.fillStyle = '#ffffff';
                 ctx.fillText(value, x, infoY + 35);
             };
 
             drawInfo('SỐ VÉ', data.info.number, 600 - 300);
-            drawInfo('TỈNH THÀNH', data.info.province.toUpperCase(), 600);
+            drawInfo('TỈNH THÀNH', formatProvinceName(data.info.province).toUpperCase(), 600);
             drawInfo('NGÀY MỞ', data.info.date, 600 + 300);
 
             // 7. Small Note
@@ -1619,7 +1767,7 @@
 
             // Trigger Download
             const link = document.createElement('a');
-            link.download = `LotteryAI_Win_${data.info.number}.png`;
+            link.download = `DoVeSoAI_Win_${data.info.number}.png`;
             link.href = canvas.toDataURL('image/png', 1.0);
             link.click();
         }
@@ -1690,15 +1838,15 @@
             container.classList.remove('hidden');
 
             let tableHtml = `
-                <div class="premium-glass rounded-2xl overflow-hidden bg-white/[0.02] border-white/5">
+                <div class="premium-glass rounded-2xl overflow-hidden bg-[var(--input-bg)] border-[var(--glass-border)]">
                     <table class="w-full text-sm">
-                        <thead class="bg-white/5 text-[10px] uppercase font-bold text-slate-500">
+                        <thead class="bg-black/5 text-[10px] uppercase font-bold text-[var(--text-muted)] border-b border-[var(--glass-border)]">
                             <tr>
                                 <th class="py-3 px-4 text-left">Giải</th>
                                 <th class="py-3 px-4 text-center">Các số trúng</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-white/5">
+                        <tbody class="divide-y divide-[var(--glass-border)]">
             `;
 
             const prizeOrder = ['Giải Đặc Biệt', 'Giải Nhất', 'Giải Nhì', 'Giải Ba', 'Giải Tư', 'Giải Năm', 'Giải Sáu', 'Giải Bảy', 'Giải Tám'];
@@ -1715,8 +1863,8 @@
             sortedEntries.forEach(([prize, numbers]) => {
                 tableHtml += `
                     <tr>
-                        <td class="py-3 px-4 font-bold text-slate-400 text-xs">${prize}</td>
-                        <td class="py-3 px-4 text-center font-mono tracking-wider text-orange-200">${Array.isArray(numbers) ? numbers.join(' - ') : numbers}</td>
+                        <td class="py-3 px-4 font-bold text-[var(--text-muted)] text-xs">${prize}</td>
+                        <td class="py-3 px-4 text-center font-mono tracking-wider text-orange-400 font-bold">${Array.isArray(numbers) ? numbers.join(' - ') : numbers}</td>
                     </tr>
                 `;
             });
@@ -1734,22 +1882,71 @@
         const apiKeyInput = document.getElementById('api-key-input');
 
         apiKeyInput.value = localStorage.getItem('gemini_api_key') || '';
-        document.getElementById('open-settings').addEventListener('click', () => settingsModal.style.display = 'flex');
-        document.getElementById('close-settings').addEventListener('click', () => settingsModal.style.display = 'none');
+        document.getElementById('open-settings').addEventListener('click', () => openModal(settingsModal));
+        document.getElementById('close-settings').addEventListener('click', () => closeModal(settingsModal));
         document.getElementById('save-settings').addEventListener('click', () => {
+            // Save API Key
             const key = apiKeyInput.value.trim();
             if (key) localStorage.setItem('gemini_api_key', key);
             else localStorage.removeItem('gemini_api_key');
-            settingsModal.style.display = 'none';
+
+            // Save Theme
+            const selectedTheme = themeSelect.value;
+            localStorage.setItem('app_theme', selectedTheme);
+            applyTheme(selectedTheme);
+
+            closeModal(settingsModal);
+        });
+
+        // --- Modal & Back Button Management ---
+        const MODAL_STATE = 'modal-open';
+        const RESULTS_STATE = 'results-view';
+
+        function openModal(modal) {
+            if (!modal) return;
+            modal.style.display = 'flex';
+            // Always push a new state when a modal opens, even if we are already in RESULTS_STATE
+            window.history.pushState(MODAL_STATE, '');
+        }
+
+        function closeModal(modal, isPopState = false) {
+            if (!modal) return;
+            modal.style.display = 'none';
+            if (modal === cameraUI) stopCamera();
+
+            // If we closed it via UI button (not back button), we need to "go back" in history
+            if (!isPopState) {
+                window.history.back();
+            }
+        }
+
+        window.addEventListener('popstate', (event) => {
+            const state = event.state;
+
+            // 1. Handle Modals: If state is not MODAL_STATE, close all modals
+            if (state !== MODAL_STATE) {
+                [resultsModal, settingsModal, cameraUI].forEach(modal => {
+                    if (modal.style.display === 'flex' || !modal.classList.contains('hidden')) {
+                        modal.style.display = 'none';
+                        if (modal === cameraUI) stopCamera();
+                    }
+                });
+            }
+
+            // 2. Handle Results View: If state is null (Home), reset UI
+            if (!state) {
+                resetUI();
+            }
         });
 
         // Results Modal Events
-        document.getElementById('close-results').addEventListener('click', () => resultsModal.style.display = 'none');
-        document.getElementById('close-results-btn').addEventListener('click', () => resultsModal.style.display = 'none');
+        document.getElementById('close-results').addEventListener('click', () => closeModal(resultsModal));
+        document.getElementById('close-results-btn').addEventListener('click', () => closeModal(resultsModal));
         window.addEventListener('click', (e) => {
-            if (e.target === settingsModal) settingsModal.style.display = 'none';
-            if (e.target === resultsModal) resultsModal.style.display = 'none';
+            if (e.target === settingsModal) closeModal(settingsModal);
+            if (e.target === resultsModal) closeModal(resultsModal);
         });
+
 
         // PWA Registration
         if ('serviceWorker' in navigator) {
