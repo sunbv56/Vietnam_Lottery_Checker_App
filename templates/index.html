@@ -1138,6 +1138,27 @@
             if (files.length > 0) handleFiles(files);
         });
 
+        // --- Clipboard (Paste) Support ---
+        window.addEventListener('paste', (e) => {
+            const items = e.clipboardData.items;
+            const files = [];
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf('image') !== -1) {
+                    const blob = items[i].getAsFile();
+                    if (blob) files.push(blob);
+                }
+            }
+            if (files.length > 0) {
+                // UI Feedback
+                dropZone.classList.add('border-orange-500', 'bg-orange-500/10', 'scale-[1.02]');
+                setTimeout(() => {
+                    dropZone.classList.remove('border-orange-500', 'bg-orange-500/10', 'scale-[1.02]');
+                }, 500);
+
+                handleFiles(files);
+            }
+        });
+
         async function handleFiles(files) {
             const dataUrls = [];
             for (const file of files) {
