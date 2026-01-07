@@ -305,6 +305,45 @@
                 left: 50%;
                 transform: translateX(-50%);
             }
+
+            /* Mobile History Drawer */
+            .history-drawer {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: var(--bg-main);
+                border-top: 1px solid var(--glass-border);
+                border-radius: 2rem 2rem 0 0;
+                z-index: 500;
+                transform: translateY(100%);
+                transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+                max-height: 80vh;
+                display: flex;
+                flex-direction: column;
+                padding: 2rem 1.5rem 1.5rem;
+                box-shadow: 0 -10px 40px var(--shadow-color);
+            }
+
+            .history-drawer.open {
+                transform: translateY(0);
+            }
+
+            .history-drawer-overlay {
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.6);
+                backdrop-filter: blur(4px);
+                z-index: 499;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.3s ease;
+            }
+
+            .history-drawer-overlay.visible {
+                opacity: 1;
+                pointer-events: auto;
+            }
         }
 
         @media (min-width: 769px) {
@@ -455,16 +494,22 @@
         <!-- Left Side: Main Controls -->
         <div class="lg:col-span-2 space-y-8">
             <header class="flex justify-between items-center animate-fade-in">
-                <div>
-                    <h1 class="text-4xl font-extrabold tracking-tight">
+                <div onclick="resetUI()" class="cursor-pointer group">
+                    <h1 class="text-4xl font-extrabold tracking-tight transition-transform group-active:scale-95">
                         <span class="gradient-text">Dò Vé Số AI</span>
                     </h1>
                     <p class="text-[var(--text-muted)] text-sm mt-1">Dò vé số thông minh với AI</p>
                 </div>
-                <button id="open-settings"
-                    class="w-10 h-10 rounded-full premium-glass flex items-center justify-center text-[var(--text-muted)] hover:text-white transition-colors">
-                    <i class="fas fa-cog"></i>
-                </button>
+                <div class="flex items-center gap-2">
+                    <button id="open-history" onclick="toggleMobileHistory()"
+                        class="lg:hidden w-10 h-10 rounded-full premium-glass flex items-center justify-center text-[var(--text-muted)] hover:text-white transition-colors">
+                        <i class="fas fa-history"></i>
+                    </button>
+                    <button id="open-settings"
+                        class="w-10 h-10 rounded-full premium-glass flex items-center justify-center text-[var(--text-muted)] hover:text-white transition-colors">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
             </header>
 
             <main class="space-y-6">
@@ -565,6 +610,9 @@
                         </div>
 
                         <div id="results-data" class="hidden space-y-8">
+                            <!-- Win Status moved to top -->
+                            <div id="win-status"></div>
+
                             <div class="flex justify-between items-center mb-2">
                                 <h3 class="text-lg font-bold">Kết quả phân tích</h3>
                                 <button id="edit-toggle-btn" onclick="toggleEditMode()"
@@ -616,8 +664,6 @@
                                     lại với nhà đài</p>
                             </div>
 
-                            <div id="win-status"></div>
-
                             <button id="scan-new-btn" onclick="resetUI()"
                                 class="w-full bg-[var(--input-bg)] hover:bg-[var(--input-bg)] py-4 rounded-2xl font-bold transition-all border border-[var(--glass-border)] uppercase tracking-widest text-sm">
                                 <i class="fas fa-redo-alt mr-2 opacity-50"></i>Quét vé khác
@@ -654,7 +700,11 @@
         </div>
 
         <!-- Right Side: History & Stats -->
-        <div class="space-y-6 animate-fade-in" style="animation-delay: 0.2s">
+        <div id="history-drawer-overlay" class="history-drawer-overlay lg:hidden" onclick="toggleMobileHistory()"></div>
+        <div id="history-drawer"
+            class="lg:col-span-1 space-y-6 history-drawer lg:translate-y-0 lg:static lg:block lg:bg-transparent lg:border-none lg:p-0 lg:shadow-none lg:max-h-full"
+            style="animation-delay: 0.2s">
+            <div class="mobile-handle lg:hidden"></div>
             <!-- Statistics Card -->
             <div id="stats-container"
                 class="premium-glass rounded-3xl p-6 border-[var(--glass-border)] bg-gradient-to-br from-orange-500/5 to-pink-500/5">
@@ -693,7 +743,7 @@
                 </button>
             </div>
 
-            <div id="history-list" class="space-y-4 max-h-[80vh] overflow-y-auto pr-2 custom-scrollbar">
+            <div id="history-list" class="space-y-4 max-h-[50vh] lg:max-h-[80vh] overflow-y-auto pr-2 custom-scrollbar">
                 <!-- History items injected here -->
                 <div class="text-center py-20 opacity-30 italic text-sm" id="empty-history">
                     Chưa có vé nào được quét
@@ -1432,6 +1482,12 @@
             // Hide batch navigation
             const nav = document.getElementById('batch-nav');
             if (nav) nav.classList.add('hidden');
+
+            // Close mobile history if open
+            const drawer = document.getElementById('history-drawer');
+            const overlay = document.getElementById('history-drawer-overlay');
+            if (drawer) drawer.classList.remove('open');
+            if (overlay) overlay.classList.remove('visible');
         }
 
         let currentBatch = [];
@@ -2164,6 +2220,7 @@
 
         // --- Modal & Back Button Management ---
         const MODAL_STATE = 'modal-open';
+        const HISTORY_STATE = 'history-open';
         const RESULTS_STATE = 'results-view';
 
         function openModal(modal) {
@@ -2187,7 +2244,9 @@
         window.addEventListener('popstate', (event) => {
             const state = event.state;
 
-            // 1. Handle Modals: If state is not MODAL_STATE, close all modals
+            // 1. Handle Modals & Drawer
+
+            // Close Modals if not in MODAL_STATE
             if (state !== MODAL_STATE) {
                 [resultsModal, settingsModal, cameraUI].forEach(modal => {
                     if (modal.style.display === 'flex' || !modal.classList.contains('hidden')) {
@@ -2195,6 +2254,16 @@
                         if (modal === cameraUI) stopCamera();
                     }
                 });
+            }
+
+            // Close History Drawer if not in HISTORY_STATE
+            if (state !== HISTORY_STATE) {
+                const drawer = document.getElementById('history-drawer');
+                const overlay = document.getElementById('history-drawer-overlay');
+                if (drawer && drawer.classList.contains('open')) {
+                    drawer.classList.remove('open');
+                    overlay.classList.remove('visible');
+                }
             }
 
             // 2. Handle Results View: If state is null (Home), reset UI
@@ -2226,6 +2295,21 @@
         // Initialize
         renderHistory();
         renderStatistics();
+
+        // --- Mobile History Drawer ---
+        function toggleMobileHistory(isPopState = false) {
+            const drawer = document.getElementById('history-drawer');
+            const overlay = document.getElementById('history-drawer-overlay');
+            if (drawer.classList.contains('open')) {
+                drawer.classList.remove('open');
+                overlay.classList.remove('visible');
+                if (!isPopState) window.history.back();
+            } else {
+                drawer.classList.add('open');
+                overlay.classList.add('visible');
+                if (!isPopState) window.history.pushState(HISTORY_STATE, '');
+            }
+        }
     </script>
 </body>
 
