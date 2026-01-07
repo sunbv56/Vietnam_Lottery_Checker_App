@@ -459,7 +459,7 @@
                     <h1 class="text-4xl font-extrabold tracking-tight">
                         <span class="gradient-text">Dò Vé Số AI</span>
                     </h1>
-                    <p class="text-[var(--text-muted)] text-sm mt-1">Dò vé số thông minh với Gemini AI</p>
+                    <p class="text-[var(--text-muted)] text-sm mt-1">Dò vé số thông minh với AI</p>
                 </div>
                 <button id="open-settings"
                     class="w-10 h-10 rounded-full premium-glass flex items-center justify-center text-[var(--text-muted)] hover:text-white transition-colors">
@@ -560,7 +560,7 @@
                         <div id="loading" class="flex flex-col items-center py-8">
                             <div class="loader mb-4"></div>
                             <h3 class="font-bold text-lg">Đang phân tích dữ liệu...</h3>
-                            <p class="text-[var(--text-muted)] text-sm">Gemini AI đang nhận diện số và tỉnh thành
+                            <p class="text-[var(--text-muted)] text-sm">AI đang nhận diện số và tỉnh thành
                             </p>
                         </div>
 
@@ -738,8 +738,8 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-3">Gemini
-                        API Key
+                    <label class="block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-3">AI API
+                        Key
                         (Cá nhân)</label>
                     <input type="password" id="api-key-input" placeholder="Dán API key tại đây..."
                         class="w-full bg-[var(--input-bg)] border border-[var(--glass-border)] rounded-2xl px-5 py-4 focus:outline-none focus:border-orange-500 transition-all text-[var(--text-main)]">
@@ -1490,7 +1490,7 @@
             }
 
             loading.classList.add('hidden');
-            loading.querySelector('p').textContent = 'Gemini AI đang nhận diện số và tỉnh thành'; // Reset text
+            loading.querySelector('p').textContent = 'AI đang nhận diện số và tỉnh thành'; // Reset text
 
             if (currentBatch.length > 0) {
                 showBatchResults();

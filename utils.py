@@ -9,9 +9,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Configure Gemini
+# Configure AI
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel('gemini-2.5-flash')
+model = genai.GenerativeModel('gemma-3-27b-it')
 
 PROVINCE_MAP = {
     # --- MIỀN NAM (Full 21 lotteries) ---
@@ -70,7 +70,7 @@ PROVINCE_MAP = {
     "hải phòng": "hai-phong"
 }
 
-# Danh sách các model để fallback (ưu tiên model cao nhất/mới nhất)
+# Danh sách các model để fallback (ưu tiên model Gemma 3)
 MODELS_TO_TRY = [
     'gemma-3-27b-it',
     'gemma-3-12b-it',
@@ -123,7 +123,7 @@ def normalize_date(date_str):
 
 def extract_ticket_info(image_bytes, api_key=None):
     """
-    Sử dụng Gemini để trích xuất thông tin Tỉnh, Ngày và Số từ ảnh vé số.
+    Sử dụng AI để trích xuất thông tin Tỉnh, Ngày và Số từ ảnh vé số.
     """
     if api_key:
         genai.configure(api_key=api_key)

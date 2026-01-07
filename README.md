@@ -1,6 +1,6 @@
 # 🎫 Vietnam Lottery AI (LotteryAI) - Trợ Lý Dò Vé Số Thông Minh
 
-Ứng dụng web cao cấp giúp tự động hóa việc kiểm tra vé số Việt Nam bằng sức mạnh của **Google Gemini 2.0 Flash**. Không còn phải đối chiếu từng con số thủ công, tất cả những gì bạn cần là một bức ảnh.
+Ứng dụng web cao cấp giúp tự động hóa việc kiểm tra vé số Việt Nam bằng sức mạnh của **Trí tuệ Nhân tạo (AI)**. Không còn phải đối chiếu từng con số thủ công, tất cả những gì bạn cần là một bức ảnh.
 
 [![Deploy on Fly.io](https://img.shields.io/badge/Deploy-Fly.io-blueviolet?style=for-the-badge&logo=fly.io)](https://vietnam-lottery-checker-app.fly.dev/)
 [![PWA Ready](https://img.shields.io/badge/PWA-Ready-orange?style=for-the-badge&logo=pwa)](https://vietnam-lottery-checker-app.fly.dev/)
@@ -9,7 +9,7 @@
 
 ## ✨ Tính năng đột phá
 
-- **🤖 OCR Đa Model (Gemini AI)**: Tự động nhận diện Tỉnh/Thành, Ngày mở thưởng và Dãy số từ ảnh. Hỗ trợ cơ chế Fallback thông minh giữa các đời model Gemini (2.0 Flash, 1.5 Flash, 2.0 Flash-Lite) để đảm bảo độ chính xác cao nhất.
+- **🤖 OCR Đa Model (AI)**: Tự động nhận diện Tỉnh/Thành, Ngày mở thưởng và Dãy số từ ảnh. Hỗ trợ cơ chế Fallback thông minh giữa các đời model AI (Gemma 3, Gemini 2.0 Flash...) để đảm bảo độ chính xác cao nhất.
 - **⚡ Kiểm tra kết quả tức thì**: Tự động thu thập (cào) dữ liệu từ nguồn uy tín (Minh Ngọc) ngay khi có thông tin vé.
 - **📊 Thống kê & Tài chính**: Theo dõi tổng số tiền trúng thưởng, số vé đã quét và tỉ lệ may mắn qua bảng dashboard trực quan.
 - **📱 Trải nghiệm PWA (Progressive Web App)**: Cho phép cài đặt ứng dụng lên màn hình chính điện thoại như một app thực thụ, hỗ trợ offline cache cơ bản và tốc độ load cực nhanh.
@@ -22,9 +22,9 @@
 
 ## 🛠️ Công nghệ sử dụng
 
-- **Backend**: Python, Flask, BeautifulSoup4 (Scraping), Google Generative AI SDK.
+- **Backend**: Python, Flask, BeautifulSoup4 (Scraping), Google AI SDK.
 - **Frontend**: HTML5, TailwindCSS, JavaScript (ES6+).
-- **AI**: Google Gemini Pro Vision / Gemini 2.0 Flash.
+- **AI**: Gemma 3 / Gemini 2.0 Flash.
 - **Deployment**: Docker, Fly.io.
 - **PWA**: Service Workers, Web Manifest.
 
