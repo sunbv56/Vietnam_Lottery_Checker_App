@@ -39,7 +39,7 @@ def check_ticket():
             tickets = extract_ticket_info(image_data, api_key=api_key)
         else:
             return jsonify({"error": "Vui lòng cung cấp ảnh hoặc thông tin vé số."}), 400
-
+ 
         if not tickets:
             return jsonify({"error": "Không thể nhận diện thông tin từ ảnh. Vui lòng thử lại với ảnh rõ nét hơn hoặc nhập thủ công."}), 400
         
