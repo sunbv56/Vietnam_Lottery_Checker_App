@@ -125,17 +125,22 @@ def extract_ticket_info(image_bytes, api_key=None):
     import base64
     import json
     
-    # 1. Prepare API Key
+    # 1. Prepare Authentication
     key = api_key or os.getenv("GEMINI_API_KEY")
     if not key:
         print("Lỗi: Không tìm thấy Gemini API Key")
         return []
 
+    headers = {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': key
+    }
+
     # 2. Encode image to base64 if it's bytes
     if isinstance(image_bytes, bytes):
         img_b64 = base64.b64encode(image_bytes).decode('utf-8')
     else:
-        img_b64 = image_bytes # Assume already b64 string
+        img_b64 = image_bytes 
 
     # 3. Prepare Prompt
     prompt_text = f"""
@@ -157,78 +162,82 @@ def extract_ticket_info(image_bytes, api_key=None):
     - CHỈ TRẢ VỀ JSON, KHÔNG GIẢI THÍCH, KHÔNG CHÚ THÍCH.
     """
 
-    # 4. Prepare Payload for REST API
-    url = "https://generativelanguage.googleapis.com/v1beta/models/gemma-3-27b-it:generateContent"
-    headers = {
-        'Content-Type': 'application/json',
-        'x-goog-api-key': key
-    }
-    
-    payload = {
-        "contents": [{
-            "parts": [
-                {
-                    "inline_data": {
-                        "mime_type": "image/jpeg",
-                        "data": img_b64
-                    }
-                },
-                {"text": prompt_text}
-            ]
-        }],
-        "generationConfig": {
-            "temperature": 0.1,
-            "topP": 0.95,
-            "topK": 40,
-            "maxOutputTokens": 1024
-        }
-    }
+    for model_name in MODELS_TO_TRY:
+        try:
+            print(f"Đang thử trích xuất bằng {model_name} (REST API)...")
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
+            
+            # 4. Prepare Payload
+            payload = {
+                "contents": [{
+                    "parts": [
+                        {
+                            "inline_data": {
+                                "mime_type": "image/jpeg",
+                                "data": img_b64
+                            }
+                        },
+                        {"text": prompt_text}
+                    ]
+                }],
+                "generationConfig": {
+                    "temperature": 0.1,
+                    "topP": 0.95,
+                    "topK": 40,
+                    "maxOutputTokens": 1024
+                }
+            }
 
-    try:
-        print(f"Đang gửi yêu cầu tới Gemma 3 REST API (x-goog-api-key)...")
-        response = requests.post(url, headers=headers, json=payload, timeout=30)
-        
-        if response.status_code != 200:
-            print(f"Lỗi API ({response.status_code}): {response.text}")
-            response.raise_for_status()
+            # Optional: Enable JSON mode ONLY for gemini models
+            if "gemini" in model_name.lower():
+                payload["generationConfig"]["responseMimeType"] = "application/json"
+
+            response = requests.post(url, headers=headers, json=payload, timeout=25)
             
-        result = response.json()
-        
-        # Extract text from response
-        if 'candidates' in result and len(result['candidates']) > 0:
-            text = result['candidates'][0]['content']['parts'][0]['text'].strip()
+            if response.status_code != 200:
+                print(f"Model {model_name} lỗi ({response.status_code}): {response.text[:100]}...")
+                continue
+                
+            result = response.json()
             
-            # Use existing robust cleaning logic
-            text = re.sub(r'```json\s*|```', '', text)
-            start_idx = text.find('[')
-            end_idx = text.rfind(']')
-            
-            if start_idx != -1 and end_idx != -1:
-                json_str = text[start_idx:end_idx+1]
-                tickets = json.loads(json_str)
-            else:
-                start_obj = text.find('{')
-                end_obj = text.rfind('}')
-                if start_obj != -1 and end_obj != -1:
-                    json_str = f"[{text[start_obj:end_obj+1]}]"
+            # Extract text from response
+            if 'candidates' in result and len(result['candidates']) > 0:
+                text = result['candidates'][0]['content']['parts'][0]['text'].strip()
+                
+                # Robust cleaning
+                text = re.sub(r'```json\s*|```', '', text)
+                start_idx = text.find('[')
+                end_idx = text.rfind(']')
+                
+                if start_idx != -1 and end_idx != -1:
+                    json_str = text[start_idx:end_idx+1]
                     tickets = json.loads(json_str)
                 else:
-                    return []
-
-            if isinstance(tickets, list):
-                final_tickets = []
-                for t in tickets:
-                    if not all(k in t for k in ['province', 'date', 'number']):
+                    start_obj = text.find('{')
+                    end_obj = text.rfind('}')
+                    if start_obj != -1 and end_obj != -1:
+                        json_str = f"[{text[start_obj:end_obj+1]}]"
+                        tickets = json.loads(json_str)
+                    else:
                         continue
-                    t['date'] = normalize_date(str(t.get('date', '')))
-                    t['number'] = str(t.get('number', '')).strip()
-                    t['province'] = str(t.get('province', '')).strip()
-                    final_tickets.append(t)
-                return final_tickets
 
-    except Exception as e:
-        print(f"Lỗi khi gọi Gemini REST API: {str(e)}")
-        
+                if isinstance(tickets, list):
+                    final_tickets = []
+                    for t in tickets:
+                        if not all(k in t for k in ['province', 'date', 'number']):
+                            continue
+                        t['date'] = normalize_date(str(t.get('date', '')))
+                        t['number'] = str(t.get('number', '')).strip()
+                        t['province'] = str(t.get('province', '')).strip()
+                        final_tickets.append(t)
+                    
+                    if final_tickets:
+                        return final_tickets
+
+        except Exception as e:
+            print(f"Lỗi khi thử {model_name}: {str(e)}")
+            continue
+
     return []
 
 def crawl_kqxs_final(province_slug, date_str):
