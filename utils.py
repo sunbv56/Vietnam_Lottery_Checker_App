@@ -136,21 +136,22 @@ def extract_ticket_info(image_bytes, api_key=None):
     
     prompt = f"""
     ### NHIỆM VỤ: TRÍCH XUẤT THÔNG TIN VÉ SỐ VIỆT NAM ###
-    Bạn là một trợ lý AI chuyên nghiệp. Hãy phân tích ảnh và trích xuất thông tin của TỐI ĐA 3 tờ vé số rõ nhất.
+    Bạn là một trợ lý AI chuyên nghiệp. Hãy phân tích ảnh và trích xuất thông tin của TẤT CẢ các tờ vé số có trong ảnh (tối đa 5 tờ).
     
-    YÊU CẦU DỮ LIỆU:
-    1. province: Tên tỉnh/thành phố (ví dụ: An Giang, Tiền Giang...).
+    YÊU CẦU DỮ LIỆU CHI TIẾT CHO MỖI VÉ:
+    1. province: Tên tỉnh/thành phố (ví dụ: An Giang, Tiền Giang, TP.HCM...). Nhận diện đúng tên tỉnh ghi trên vé.
     2. date: Ngày mở thưởng (Định dạng: DD-MM-YYYY).
-    3. number: Dãy số dự thưởng (chuỗi số, thường là 6 chữ số).
+    3. number: Dãy số dự thưởng (BẮT BUỘC PHẢI LÀ 6 CHỮ SỐ). 
+       - LƯU Ý QUAN TRỌNG: Đây là dãy số lớn nhất, nổi bật nhất trên vé số, thường nằm ở hàng cuối cùng hoặc giữa vé. 
+       - HÃY ĐỌC TỪNG CHỮ SỐ MỘT CÁCH CẨN THẬN để tránh nhầm lẫn giữa 0-8, 1-7, 5-6...
+       - Đảm bảo trích xuất ĐỦ 6 ký tự số.
     
-    DANH SÁCH TỈNH HỢP LỆ: {list(PROVINCE_MAP.keys())[:30]}...
+    DANH SÁCH TỈNH THAM KHẢO: {list(PROVINCE_MAP.keys())[:40]}...
     
-    MẪU TRẢ VỀ (JSON ARRAY):
-    [
-      {{"province": "An Giang", "date": "25-12-2025", "number": "123456"}}
-    ]
-    
-    CHỈ TRẢ VỀ JSON, KHÔNG GIẢI THÍCH GÌ THÊM.
+    YÊU CẦU ĐỊNH DẠNG TRẢ VỀ:
+    - Trả về một JSON ARRAY duy nhất chứa các object.
+    - Cấu trúc: [ {{"province": "...", "date": "...", "number": "..."}}, ... ]
+    - CHỈ TRẢ VỀ JSON, KHÔNG GIẢI THÍCH, KHÔNG CHÚ THÍCH, KHÔNG CÓ TEXT GÌ KHÁC.
     """
     
     import json
@@ -162,27 +163,39 @@ def extract_ticket_info(image_bytes, api_key=None):
             text = response.text.strip()
 
             # Robust JSON Extraction
-            # 1. Clean markdown
+            # 1. Clean markdown and extra text
             text = re.sub(r'```json\s*|```', '', text)
             
-            # 2. Find array or object using regex
-            match_array = re.search(r'\[\s*\{.*\}\s*\]', text, re.DOTALL)
-            match_obj = re.search(r'\{\s*".*"\s*:\s*".*"\s*\}', text, re.DOTALL)
+            # 2. Find the first [ and last ] to extract the array
+            start_idx = text.find('[')
+            end_idx = text.rfind(']')
             
-            json_str = ""
-            if match_array:
-                json_str = match_array.group()
-            elif match_obj:
-                json_str = f"[{match_obj.group()}]"
-            
-            if json_str:
+            if start_idx != -1 and end_idx != -1:
+                json_str = text[start_idx:end_idx+1]
                 tickets = json.loads(json_str)
-                if isinstance(tickets, list):
-                    # Normalize dates in results
-                    for t in tickets:
-                        if 'date' in t:
-                            t['date'] = normalize_date(t['date'])
-                    return tickets
+            else:
+                # Try finding an object if array not found
+                start_obj = text.find('{')
+                end_obj = text.rfind('}')
+                if start_obj != -1 and end_obj != -1:
+                    json_str = f"[{text[start_obj:end_obj+1]}]"
+                    tickets = json.loads(json_str)
+                else:
+                    continue
+
+            if isinstance(tickets, list):
+                # Normalize dates and clean strings in results
+                final_tickets = []
+                for t in tickets:
+                    if not all(k in t for k in ['province', 'date', 'number']):
+                        continue
+                    t['date'] = normalize_date(str(t.get('date', '')))
+                    t['number'] = str(t.get('number', '')).strip()
+                    t['province'] = str(t.get('province', '')).strip()
+                    final_tickets.append(t)
+                
+                if final_tickets:
+                    return final_tickets
 
         except Exception as e:
             print(f"Lỗi với model {model_name}: {str(e)}")

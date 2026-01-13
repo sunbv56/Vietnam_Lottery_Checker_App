@@ -1510,7 +1510,7 @@
             for (let i = 0; i < dataUrls.length; i++) {
                 if (dataUrls.length > 1) {
                     loading.querySelector('p').textContent = `Đang xử lý ảnh ${i + 1}/${dataUrls.length}...`;
-                    previewImg.src = dataUrls[i]; // Update preview as we go
+                    previewImg.src = dataUrls[i];
                 }
 
                 try {
@@ -1524,16 +1524,12 @@
 
                     if (data.results && Array.isArray(data.results)) {
                         data.results.forEach(res => {
-                            if (res.status === 'OK') {
-                                res.imageUrl = dataUrls[i]; // Store image for navigation sync
+                            res.imageUrl = dataUrls[i]; // Store image
+                            if (res.status === 'OK' || res.status === 'NOT_READY') {
                                 currentBatch.push(res);
                                 saveToHistory(res);
                             } else {
-                                // Collect errors/not_ready for summary
                                 batchErrors.push(res);
-                                if (res.status === 'NOT_READY') {
-                                    saveToHistory(res); // Still save NOT_READY to history
-                                }
                             }
                         });
                     } else if (data.error) {
@@ -1546,7 +1542,7 @@
             }
 
             loading.classList.add('hidden');
-            loading.querySelector('p').textContent = 'AI đang nhận diện số và tỉnh thành'; // Reset text
+            loading.querySelector('p').textContent = 'AI đang nhận diện số và tỉnh thành';
 
             if (currentBatch.length > 0) {
                 showBatchResults();
@@ -1554,10 +1550,9 @@
                     showBatchSummaryNotification();
                 }
             } else {
-                // If all failed, show the primary error screen with a consolidated message
-                const errorMsgText = batchErrors.length > 1
-                    ? `Đã quét xong ${dataUrls.length} ảnh nhưng không thể nhận diện được vé số nào hợp lệ.`
-                    : (batchErrors[0]?.message || 'Không thể nhận diện vé số.');
+                const errorMsgText = batchErrors.length > 0
+                    ? `Không thể nhận diện được vé số nào hợp lệ từ ${dataUrls.length} ảnh.`
+                    : 'Không thể nhận diện vé số.';
                 showError(errorMsgText);
             }
         }
@@ -1580,15 +1575,18 @@
 
             const data = currentBatch[currentIndex];
 
-            // Sync image with current ticket
+            // Sync image
             if (data.imageUrl) {
                 previewImg.src = data.imageUrl;
                 previewImg.classList.remove('hidden');
             }
 
-            showResults(data, false); // No auto-open in batch mode
+            if (data.status === 'OK') {
+                showResults(data, false);
+            } else if (data.status === 'NOT_READY') {
+                showResults(data, false); // showResults supports showing messages
+            }
 
-            // Update navigation UI
             renderNavigation();
         }
 
@@ -1597,7 +1595,7 @@
             if (!navContainer) {
                 navContainer = document.createElement('div');
                 navContainer.id = 'batch-nav';
-                navContainer.className = 'flex justify-center items-center gap-4 mt-6';
+                navContainer.className = 'flex justify-between items-center gap-4 mt-6 px-2';
                 resultsData.parentNode.insertBefore(navContainer, resultsData);
             }
 
@@ -1608,14 +1606,17 @@
 
             navContainer.classList.remove('hidden');
             navContainer.innerHTML = `
-                <button onclick="prevTicket()" class="w-10 h-10 rounded-full premium-glass flex items-center justify-center text-[var(--text-muted)] hover:text-white transition-all ${currentIndex === 0 ? 'opacity-30 pointer-events-none' : ''}">
-                    <i class="fas fa-chevron-left"></i>
+                <button onclick="prevTicket()" class="w-12 h-12 rounded-2xl premium-glass flex items-center justify-center text-[var(--text-muted)] hover:text-white transition-all hover:bg-white/10 ${currentIndex === 0 ? 'opacity-20 pointer-events-none' : ''}">
+                    <i class="fas fa-arrow-left"></i>
                 </button>
-                <div class="flex gap-2">
-                    ${currentBatch.map((_, i) => `<div class="w-2 h-2 rounded-full transition-all ${i === currentIndex ? 'bg-orange-500 w-6' : 'bg-white/20'}"></div>`).join('')}
+                <div class="flex flex-col items-center">
+                    <span class="text-[10px] font-black uppercase tracking-[0.2em] text-orange-500 mb-1">Vé ${currentIndex + 1}/${currentBatch.length}</span>
+                    <div class="flex gap-1.5">
+                        ${currentBatch.map((_, i) => `<div class="w-1.5 h-1.5 rounded-full transition-all duration-300 ${i === currentIndex ? 'bg-orange-500 w-4' : 'bg-white/10'}"></div>`).join('')}
+                    </div>
                 </div>
-                <button onclick="nextTicket()" class="w-10 h-10 rounded-full premium-glass flex items-center justify-center text-[var(--text-muted)] hover:text-white transition-all ${currentIndex === currentBatch.length - 1 ? 'opacity-30 pointer-events-none' : ''}">
-                    <i class="fas fa-chevron-right"></i>
+                <button onclick="nextTicket()" class="w-12 h-12 rounded-2xl premium-glass flex items-center justify-center text-[var(--text-muted)] hover:text-white transition-all hover:bg-white/10 ${currentIndex === currentBatch.length - 1 ? 'opacity-20 pointer-events-none' : ''}">
+                    <i class="fas fa-arrow-right"></i>
                 </button>
             `;
         }
@@ -1712,19 +1713,28 @@
                 modalLoseContainer.classList.remove('hidden');
                 document.getElementById('share-win-btn').classList.add('hidden');
 
-                winHtml = `
+                if (data.status === 'NOT_READY') {
+                    winHtml = `
+                        <div class="premium-glass p-6 rounded-2xl text-center border-orange-500/30 bg-orange-500/5">
+                            <i class="fas fa-clock text-orange-500 mb-2 block text-2xl"></i>
+                            <p class="font-bold text-orange-200">${data.message || 'Kết quả hiện chưa có chính thức. Vui lòng quay lại sau!'}</p>
+                        </div>
+                    `;
+                } else {
+                    winHtml = `
                         <div class="premium-glass p-6 rounded-2xl text-center border-[var(--glass-border)] bg-[var(--input-bg)]">
                             <i class="fas fa-heart text-pink-500 mb-2 block"></i>
                             <p class="font-bold text-[var(--text-muted)]">Không trúng giải - Chúc bạn may mắn lần sau!</p>
                         </div>
                     `;
-                playSound('no_win');
+                    playSound('no_win');
+                }
             }
 
             winStatus.innerHTML = winHtml;
 
-            // Only auto-open modal if explicitly requested (history) or ONLY one ticket in batch
-            if (autoOpen || (currentBatch && currentBatch.length === 1)) {
+            // Only auto-open modal if explicitly requested (history) or ONLY one ticket in batch (and it's not NOT_READY/ERROR potentially)
+            if (autoOpen || (currentBatch && currentBatch.length === 1 && data.status === 'OK')) {
                 openModal(resultsModal);
             }
         }
