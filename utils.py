@@ -2,17 +2,13 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import os
-import google.generativeai as genai
 from PIL import Image
 import io
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# Configure AI
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel('gemma-3-27b-it')
-
+# PROVINCE_MAP is needed for slug conversion
 PROVINCE_MAP = {
     # --- MIỀN NAM (Full 21 lotteries) ---
     "tp.hcm": "tp-hcm",
@@ -123,18 +119,26 @@ def normalize_date(date_str):
 
 def extract_ticket_info(image_bytes, api_key=None):
     """
-    Sử dụng AI để trích xuất thông tin Tỉnh, Ngày và Số từ ảnh vé số.
+    Sử dụng Gemini REST API để trích xuất thông tin Tỉnh, Ngày và Số từ ảnh vé số.
+    Tiết kiệm RAM hơn so với dùng SDK.
     """
-    if api_key:
-        genai.configure(api_key=api_key)
-    else:
-        # Fallback to env key
-        env_key = os.getenv("GEMINI_API_KEY")
-        if env_key: genai.configure(api_key=env_key)
-
-    img = Image.open(io.BytesIO(image_bytes))
+    import base64
+    import json
     
-    prompt = f"""
+    # 1. Prepare API Key
+    key = api_key or os.getenv("GEMINI_API_KEY")
+    if not key:
+        print("Lỗi: Không tìm thấy Gemini API Key")
+        return []
+
+    # 2. Encode image to base64 if it's bytes
+    if isinstance(image_bytes, bytes):
+        img_b64 = base64.b64encode(image_bytes).decode('utf-8')
+    else:
+        img_b64 = image_bytes # Assume already b64 string
+
+    # 3. Prepare Prompt
+    prompt_text = f"""
     ### NHIỆM VỤ: TRÍCH XUẤT THÔNG TIN VÉ SỐ VIỆT NAM ###
     Bạn là một trợ lý AI chuyên nghiệp. Hãy phân tích ảnh và trích xuất thông tin của TẤT CẢ các tờ vé số có trong ảnh (tối đa 5 tờ).
     
@@ -149,24 +153,53 @@ def extract_ticket_info(image_bytes, api_key=None):
     DANH SÁCH TỈNH THAM KHẢO: {list(PROVINCE_MAP.keys())[:40]}...
     
     YÊU CẦU ĐỊNH DẠNG TRẢ VỀ:
-    - Trả về một JSON ARRAY duy nhất chứa các object.
-    - Cấu trúc: [ {{"province": "...", "date": "...", "number": "..."}}, ... ]
-    - CHỈ TRẢ VỀ JSON, KHÔNG GIẢI THÍCH, KHÔNG CHÚ THÍCH, KHÔNG CÓ TEXT GÌ KHÁC.
+    - Trả về một JSON ARRAY duy nhất chứa các object. [ {{"province": "...", "date": "...", "number": "..."}}, ... ]
+    - CHỈ TRẢ VỀ JSON, KHÔNG GIẢI THÍCH, KHÔNG CHÚ THÍCH.
     """
-    
-    import json
-    for model_name in MODELS_TO_TRY:
-        try:
-            print(f"Đang thử trích xuất bằng: {model_name}...")
-            model = genai.GenerativeModel(model_name)
-            response = model.generate_content([prompt, img])
-            text = response.text.strip()
 
-            # Robust JSON Extraction
-            # 1. Clean markdown and extra text
-            text = re.sub(r'```json\s*|```', '', text)
+    # 4. Prepare Payload for REST API
+    url = "https://generativelanguage.googleapis.com/v1beta/models/gemma-3-27b-it:generateContent"
+    headers = {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': key
+    }
+    
+    payload = {
+        "contents": [{
+            "parts": [
+                {
+                    "inline_data": {
+                        "mime_type": "image/jpeg",
+                        "data": img_b64
+                    }
+                },
+                {"text": prompt_text}
+            ]
+        }],
+        "generationConfig": {
+            "temperature": 0.1,
+            "topP": 0.95,
+            "topK": 40,
+            "maxOutputTokens": 1024
+        }
+    }
+
+    try:
+        print(f"Đang gửi yêu cầu tới Gemma 3 REST API (x-goog-api-key)...")
+        response = requests.post(url, headers=headers, json=payload, timeout=30)
+        
+        if response.status_code != 200:
+            print(f"Lỗi API ({response.status_code}): {response.text}")
+            response.raise_for_status()
             
-            # 2. Find the first [ and last ] to extract the array
+        result = response.json()
+        
+        # Extract text from response
+        if 'candidates' in result and len(result['candidates']) > 0:
+            text = result['candidates'][0]['content']['parts'][0]['text'].strip()
+            
+            # Use existing robust cleaning logic
+            text = re.sub(r'```json\s*|```', '', text)
             start_idx = text.find('[')
             end_idx = text.rfind(']')
             
@@ -174,17 +207,15 @@ def extract_ticket_info(image_bytes, api_key=None):
                 json_str = text[start_idx:end_idx+1]
                 tickets = json.loads(json_str)
             else:
-                # Try finding an object if array not found
                 start_obj = text.find('{')
                 end_obj = text.rfind('}')
                 if start_obj != -1 and end_obj != -1:
                     json_str = f"[{text[start_obj:end_obj+1]}]"
                     tickets = json.loads(json_str)
                 else:
-                    continue
+                    return []
 
             if isinstance(tickets, list):
-                # Normalize dates and clean strings in results
                 final_tickets = []
                 for t in tickets:
                     if not all(k in t for k in ['province', 'date', 'number']):
@@ -193,14 +224,11 @@ def extract_ticket_info(image_bytes, api_key=None):
                     t['number'] = str(t.get('number', '')).strip()
                     t['province'] = str(t.get('province', '')).strip()
                     final_tickets.append(t)
-                
-                if final_tickets:
-                    return final_tickets
+                return final_tickets
 
-        except Exception as e:
-            print(f"Lỗi với model {model_name}: {str(e)}")
-            continue
-            
+    except Exception as e:
+        print(f"Lỗi khi gọi Gemini REST API: {str(e)}")
+        
     return []
 
 def crawl_kqxs_final(province_slug, date_str):

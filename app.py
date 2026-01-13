@@ -1,9 +1,11 @@
-from flask import Flask, request, jsonify, render_template
-from flask_cors import CORS
 import os
-from utils import extract_ticket_info, crawl_kqxs_final, check_win, PROVINCE_MAP, normalize_date
 import base64
-import socket
+from flask import Flask, render_template, request, jsonify
+from flask_cors import CORS
+from dotenv import load_dotenv
+from utils import extract_ticket_info, normalize_date, check_win, crawl_kqxs_final, PROVINCE_MAP
+
+load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
@@ -103,23 +105,5 @@ def check_ticket():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    def get_local_ip():
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        try:
-            # doesn't even have to be reachable
-            s.connect(('10.255.255.255', 1))
-            IP = s.getsockname()[0]
-        except Exception:
-            IP = '127.0.0.1'
-        finally:
-            s.close()
-        return IP
-
-    local_ip = get_local_ip()
-    print(f"\n{'='*55}")
-    print(f"🚀 Ứng dụng Kiểm Tra Vé Số đã sẵn sàng!")
-    print(f"💻 Truy cập trên máy tính: http://localhost:5000")
-    print(f"📱 Truy cập từ điện thoại (cùng WiFi/LAN): http://{local_ip}:5000")
-    print(f"{'='*55}\n")
-    
-    app.run(host='0.0.0.0', debug=True, port=5000)
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host='0.0.0.0', port=port)
