@@ -147,6 +147,10 @@ def extract_ticket_info(image_bytes, api_key=None):
     ### NHIỆM VỤ: TRÍCH XUẤT THÔNG TIN VÉ SỐ VIỆT NAM ###
     Bạn là một trợ lý AI chuyên nghiệp. Hãy phân tích ảnh và trích xuất thông tin của TẤT CẢ các tờ vé số có trong ảnh (tối đa 5 tờ).
     
+    YÊU CẦU ĐỊNH DẠNG TRẢ VỀ:
+    - Trả về một JSON ARRAY duy nhất chứa các object. [ {{"province": "...", "date": "...", "number": "..."}}, ... ]
+    - CHỈ TRẢ VỀ JSON, KHÔNG GIẢI THÍCH, KHÔNG CHÚ THÍCH.
+
     YÊU CẦU DỮ LIỆU CHI TIẾT CHO MỖI VÉ:
     1. province: Tên tỉnh/thành phố (ví dụ: An Giang, Tiền Giang, TP.HCM...). Nhận diện đúng tên tỉnh ghi trên vé.
     2. date: Ngày mở thưởng (Định dạng: DD-MM-YYYY).
