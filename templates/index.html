@@ -1304,16 +1304,16 @@
         document.getElementById('open-camera').addEventListener('click', async (e) => {
             e.stopPropagation();
 
-            // Android uses native camera app as requested
+            // Android & iOS use native camera app as requested
             // Use a slight delay to ensure the click is registered correctly in some mobile browsers
-            if (isAndroid()) {
+            if (isAndroid() || isIOS()) {
                 setTimeout(() => {
                     nativeCameraInput.click();
                 }, 100);
                 return;
             }
 
-            // iOS and Desktop use the custom UI (iOS remains as-is as requested, Desktop improved)
+            // Desktop use the custom UI (improved)
             if (!navigator.mediaDevices?.getUserMedia) return alert('Trình duyệt không hỗ trợ camera');
 
             try {
