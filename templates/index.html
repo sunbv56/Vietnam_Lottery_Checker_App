@@ -198,12 +198,24 @@
         }
 
         .modal {
-            display: none;
             position: fixed;
             inset: 0;
             background: rgba(0, 0, 0, 0.85);
             backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             z-index: 1000;
+            display: flex;
+            /* Always flex but controlled by opacity/visibility */
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.4s;
+        }
+
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
         }
 
         .btn-hover {
@@ -267,6 +279,20 @@
             -webkit-backdrop-filter: blur(40px);
             border: 1px solid var(--glass-border);
             opacity: 0.98;
+            transform: translateY(30px) scale(0.95);
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s;
+            will-change: transform, opacity;
+            --swipe-y: 0px;
+        }
+
+        .modal.active .modal-content-glass {
+            transform: translateY(0) scale(1);
+        }
+
+        /* Swiping State (handled by JS via variables) */
+        .modal-content-glass.swiping {
+            transition: none !important;
+            transform: translateY(var(--swipe-y)) !important;
         }
 
         @media (max-width: 768px) {
@@ -280,7 +306,11 @@
                 max-height: 95vh !important;
                 width: 100% !important;
                 padding-top: 3rem !important;
-                animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+                transform: translateY(100%);
+            }
+
+            .modal.active .modal-content-glass {
+                transform: translateY(0);
             }
 
             @keyframes slideUp {
@@ -2224,17 +2254,17 @@
 
         function openModal(modal) {
             if (!modal) return;
-            modal.style.display = 'flex';
-            // Always push a new state when a modal opens, even if we are already in RESULTS_STATE
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevent background scroll
             window.history.pushState(MODAL_STATE, '');
         }
 
         function closeModal(modal, isPopState = false) {
             if (!modal) return;
-            modal.style.display = 'none';
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
             if (modal === cameraUI) stopCamera();
 
-            // If we closed it via UI button (not back button), we need to "go back" in history
             if (!isPopState) {
                 window.history.back();
             }
@@ -2248,9 +2278,10 @@
             // Close Modals if not in MODAL_STATE
             if (state !== MODAL_STATE) {
                 [resultsModal, settingsModal, cameraUI].forEach(modal => {
-                    if (modal.style.display === 'flex' || !modal.classList.contains('hidden')) {
-                        modal.style.display = 'none';
+                    if (modal.classList.contains('active')) {
+                        modal.classList.remove('active');
                         if (modal === cameraUI) stopCamera();
+                        document.body.style.overflow = '';
                     }
                 });
             }
@@ -2296,17 +2327,100 @@
         renderStatistics();
 
         // --- Mobile History Drawer ---
+        // --- Swipe Gesture Handler ---
+        class SwipeGestureHandler {
+            constructor(modalElement, contentElement, onClose) {
+                this.modal = modalElement;
+                this.content = contentElement;
+                this.onClose = onClose;
+                this.startY = 0;
+                this.currentY = 0;
+                this.isSwiping = false;
+                this.init();
+            }
+
+            init() {
+                // Touch Events
+                this.content.addEventListener('touchstart', (e) => this.onStart(e.touches[0].pageY), { passive: true });
+                window.addEventListener('touchmove', (e) => this.onMove(e.touches[0].pageY), { passive: false });
+                window.addEventListener('touchend', () => this.onEnd());
+
+                // Mouse Events (Laptop support)
+                this.content.addEventListener('mousedown', (e) => {
+                    // Only trigger on main content, not inside interactive elements if needed
+                    if (e.button !== 0) return;
+                    this.onStart(e.pageY);
+                });
+                window.addEventListener('mousemove', (e) => this.onMove(e.pageY));
+                window.addEventListener('mouseup', () => this.onEnd());
+            }
+
+            onStart(y) {
+                if (!this.modal.classList.contains('active')) return;
+                this.startY = y;
+                this.isSwiping = true;
+                this.content.classList.add('swiping');
+            }
+
+            onMove(y) {
+                if (!this.isSwiping) return;
+                this.currentY = y - this.startY;
+
+                // Only allow downward swipe
+                if (this.currentY < 0) this.currentY = 0;
+
+                // Dampen the movement if it's too much (optional)
+                this.content.style.setProperty('--swipe-y', `${this.currentY}px`);
+
+                // Fade modal backdrop slightly as we swipe down
+                const opacity = 1 - (this.currentY / (window.innerHeight * 0.5));
+                this.modal.style.opacity = Math.max(0.5, opacity);
+
+                // Prevent scrolling while swiping
+                if (this.currentY > 10) {
+                    // event.preventDefault() for touch is handled by passive: false if needed, 
+                    // but we just check isSwiping in move handler
+                }
+            }
+
+            onEnd() {
+                if (!this.isSwiping) return;
+                this.isSwiping = false;
+                this.content.classList.remove('swiping');
+
+                const threshold = window.innerHeight * 0.25; // 25% of screen height
+
+                if (this.currentY > threshold) {
+                    // Success: Close Modal
+                    this.onClose();
+                }
+
+                // Reset styles
+                this.content.style.removeProperty('--swipe-y');
+                this.modal.style.opacity = '';
+                this.currentY = 0;
+            }
+        }
+
+        // Initialize Gestures
+        new SwipeGestureHandler(resultsModal, resultsModal.querySelector('.modal-content-glass'), () => closeModal(resultsModal));
+        new SwipeGestureHandler(settingsModal, settingsModal.querySelector('.premium-glass'), () => closeModal(settingsModal));
+        new SwipeGestureHandler(cameraUI, cameraUI.querySelector('.camera-wrapper'), () => closeModal(cameraUI));
+
         function toggleMobileHistory(isPopState = false) {
             const drawer = document.getElementById('history-drawer');
             const overlay = document.getElementById('history-drawer-overlay');
-            if (drawer.classList.contains('open')) {
-                drawer.classList.remove('open');
-                overlay.classList.remove('visible');
-                if (!isPopState) window.history.back();
-            } else {
+
+            if (!drawer.classList.contains('open')) {
                 drawer.classList.add('open');
                 overlay.classList.add('visible');
+                document.body.style.overflow = 'hidden';
                 if (!isPopState) window.history.pushState(HISTORY_STATE, '');
+            } else {
+                drawer.classList.remove('open');
+                overlay.classList.remove('visible');
+                document.body.style.overflow = '';
+                if (!isPopState) window.history.back();
             }
         }
     </script>
