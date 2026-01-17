@@ -1,0 +1,263 @@
+<div class="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+    <!-- Left Side: Main Controls -->
+    <div class="lg:col-span-2 space-y-8">
+        <header class="flex justify-between items-center animate-fade-in">
+            <div onclick="resetUI()" class="cursor-pointer group">
+                <h1 class="text-4xl font-extrabold tracking-tight transition-transform group-active:scale-95">
+                    <span class="gradient-text">Dò Vé Số AI</span>
+                </h1>
+                <p class="text-[var(--text-muted)] text-sm mt-1">Dò vé số thông minh với AI</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="open-history" onclick="toggleMobileHistory()"
+                    class="lg:hidden w-10 h-10 rounded-full premium-glass flex items-center justify-center text-[var(--text-muted)] hover:text-white transition-colors">
+                    <i class="fas fa-history"></i>
+                </button>
+                <button id="open-settings"
+                    class="w-10 h-10 rounded-full premium-glass flex items-center justify-center text-[var(--text-muted)] hover:text-white transition-colors">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </div>
+        </header>
+
+        <main class="space-y-6">
+            <!-- Action Area -->
+            <div id="drop-zone"
+                class="premium-glass rounded-3xl p-10 text-center border-2 border-dashed border-[var(--glass-border)] cursor-pointer animate-fade-in"
+                style="animation-delay: 0.1s">
+                <div id="upload-ui">
+                    <div
+                        class="mb-6 inline-flex w-20 h-20 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500/20 to-pink-500/20 text-orange-500">
+                        <i class="fas fa-cloud-upload-alt text-4xl"></i>
+                    </div>
+                    <h2 class="text-xl font-bold mb-2">Quét vé số của bạn</h2>
+                    <p class="text-[var(--text-muted)] text-sm">Kéo thả ảnh vào vùng này hoặc bấm trực tiếp để tải
+                        lên</p>
+                    <p class="text-[11px] text-[var(--text-muted)] mt-2 mb-8 uppercase tracking-widest font-bold">Hỗ
+                        trợ JPG,
+                        PNG, WEBP & HEIC</p>
+
+                    <div class="flex justify-center">
+                        <button id="open-camera"
+                            class="gradient-bg px-6 py-4 rounded-2xl font-bold btn-hover flex items-center justify-center shadow-lg shadow-orange-500/20 mr-3">
+                            <i class="fas fa-camera mr-2 text-xl"></i>Mở Camera
+                        </button>
+                        <button id="open-manual"
+                            class="bg-[var(--input-bg)] border border-[var(--glass-border)] px-6 py-4 rounded-2xl font-bold btn-hover flex items-center justify-center hover:bg-white/10 transition-all">
+                            <i class="fas fa-keyboard mr-2 text-xl opacity-60"></i>Nhập Thủ Công
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Manual Input UI -->
+                <div id="manual-input-ui" class="hidden animate-fade-in text-left">
+                    <div class="flex items-center justify-between mb-8">
+                        <h2 class="text-xl font-bold">Nhập thông tin vé</h2>
+                        <button onclick="hideManualInput(event)" class="text-[var(--text-muted)] hover:text-white">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div class="space-y-2">
+                            <label
+                                class="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] ml-1">Đài/Tỉnh
+                                Thành</label>
+                            <div class="relative group">
+                                <select id="manual-province"
+                                    class="w-full bg-[var(--input-bg)] border border-[var(--glass-border)] rounded-2xl px-5 py-4 focus:outline-none focus:border-orange-500 appearance-none cursor-pointer transition-all hover:bg-white/5 text-[var(--text-main)]">
+                                    <option value="">Chọn tỉnh thành...</option>
+                                    <!-- Will be populated by JS -->
+                                </select>
+                                <i
+                                    class="fas fa-chevron-down absolute right-5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none group-hover:text-orange-500"></i>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <label
+                                class="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] ml-1">Ngày
+                                Mở Thưởng (DD/MM/YYYY)</label>
+                            <input type="text" id="manual-date" placeholder="Ví dụ: 01/06/2026" maxlength="10"
+                                class="w-full bg-[var(--input-bg)] border border-[var(--glass-border)] rounded-2xl px-5 py-4 focus:outline-none focus:border-orange-500 transition-all text-[var(--text-main)]">
+                        </div>
+                        <div class="md:col-span-2 space-y-2">
+                            <label
+                                class="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] ml-1">Số
+                                Dự Thưởng (6 chữ số)</label>
+                            <input type="text" id="manual-number" maxlength="6" pattern="\d*"
+                                placeholder="Ví dụ: 123456"
+                                class="w-full bg-[var(--input-bg)] border border(--glass-border) rounded-3xl px-6 py-5 focus:outline-none focus:border-orange-500 transition-all text-4xl font-black tracking-[0.2em] text-center placeholder:text-white/10 [color-scheme:dark]">
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button onclick="hideManualInput(event)"
+                            class="flex-grow bg-[var(--input-bg)] py-4 rounded-2xl font-bold hover:bg-white/10 transition-all uppercase tracking-widest text-xs border border-[var(--glass-border)]">
+                            Quay Lại
+                        </button>
+                        <button onclick="submitManualInput()"
+                            class="flex-[2] gradient-bg py-4 rounded-2xl font-bold btn-hover uppercase tracking-widest text-xs shadow-lg shadow-orange-500/20">
+                            <i class="fas fa-search mr-2"></i>Dò Kết Quả
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <input type="file" id="file-input" class="hidden" accept="image/*" multiple>
+            <input type="file" id="native-camera-input" class="hidden" accept="image/*" capture="environment">
+
+            <!-- Processing & Results -->
+            <div id="processing-view" class="hidden space-y-6 animate-fade-in">
+                <div class="premium-glass rounded-3xl p-6">
+                    <img id="preview-img" src="" alt="Ticket" class="w-full rounded-2xl mb-6 shadow-2xl">
+
+                    <div id="loading" class="flex flex-col items-center py-8">
+                        <div class="loader mb-4"></div>
+                        <h3 class="font-bold text-lg">Đang phân tích dữ liệu...</h3>
+                        <p class="text-[var(--text-muted)] text-sm">AI đang nhận diện số và tỉnh thành
+                        </p>
+                    </div>
+
+                    <div id="results-data" class="hidden space-y-8">
+                        <!-- Win Status moved to top -->
+                        <div id="win-status"></div>
+
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="text-lg font-bold">Kết quả phân tích</h3>
+                            <button id="edit-toggle-btn" onclick="toggleEditMode()"
+                                class="text-xs font-bold uppercase text-orange-400 hover:text-orange-300 transition-colors">
+                                <i class="fas fa-edit mr-1"></i>Chỉnh sửa
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="premium-glass p-4 rounded-2xl bg-[var(--input-bg)]">
+                                <p
+                                    class="text-[var(--text-muted)] text-[10px] uppercase tracking-widest font-bold mb-1">
+                                    Tỉnh
+                                    Thành</p>
+                                <p id="res-province" class="text-orange-400 font-bold truncate outline-none">---
+                                </p>
+                            </div>
+                            <div class="premium-glass p-4 rounded-2xl bg-[var(--input-bg)]">
+                                <p
+                                    class="text-[var(--text-muted)] text-[10px] uppercase tracking-widest font-bold mb-1">
+                                    Ngày
+                                    Mở</p>
+                                <p id="res-date" class="text-orange-400 font-bold outline-none">--/--/----</p>
+                            </div>
+                            <div class="col-span-2 premium-glass p-6 rounded-2xl text-center bg-[var(--input-bg)]">
+                                <p
+                                    class="text-[var(--text-muted)] text-[10px] uppercase tracking-widest font-bold mb-2">
+                                    Số
+                                    Của Bạn</p>
+                                <p id="res-number"
+                                    class="text-4xl md:text-5xl font-black tracking-[0.15em] md:tracking-[0.2em] text-[var(--text-main)] outline-none">
+                                    ------
+                                </p>
+                            </div>
+                        </div>
+
+                        <div id="results-table-container" class="hidden animate-fade-in">
+                            <!-- Results table will be injected here -->
+                        </div>
+
+                        <div id="recheck-container" class="hidden animate-fade-in">
+                            <button onclick="reCheckManual()"
+                                class="w-full gradient-bg py-4 rounded-2xl font-bold btn-hover uppercase tracking-widest text-sm shadow-lg shadow-orange-500/20">
+                                <i class="fas fa-sync-alt mr-2"></i>Lưu & Kiểm tra lại
+                            </button>
+                            <p class="text-center text-[10px] text-[var(--text-muted)] mt-2 italic">Dữ liệu sẽ
+                                được
+                                đối chiếu
+                                lại với nhà đài</p>
+                        </div>
+
+                        <button id="scan-new-btn" onclick="resetUI()"
+                            class="w-full bg-[var(--input-bg)] hover:bg-[var(--input-bg)] py-4 rounded-2xl font-bold transition-all border border-[var(--glass-border)] uppercase tracking-widest text-sm">
+                            <i class="fas fa-redo-alt mr-2 opacity-50"></i>Quét vé khác
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error & Pending View -->
+            <div id="error-section"
+                class="hidden premium-glass border-red-500/30 rounded-3xl p-8 text-center animate-fade-in shadow-2xl">
+                <!-- Error Icon -->
+                <div id="error-icon"
+                    class="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-exclamation-triangle text-2xl"></i>
+                </div>
+                <!-- Pending Icon -->
+                <div id="pending-icon"
+                    class="hidden w-16 h-16 bg-orange-500/10 text-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-clock text-2xl"></i>
+                </div>
+
+                <h3 id="error-title" class="text-xl font-bold mb-2">Oops! Có lỗi rồi</h3>
+                <p id="error-msg" class="text-[var(--text-muted)] text-sm mb-6 leading-relaxed"></p>
+
+                <div class="flex justify-center">
+                    <button id="error-action-btn" onclick="resetUI()"
+                        class="px-10 py-3 bg-red-500/20 text-red-400 rounded-2xl hover:bg-red-500/30 transition-all font-bold min-w-[150px]">
+                        Thử lại
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Right Side: History & Stats -->
+    <div id="history-drawer-overlay" class="history-drawer-overlay lg:hidden" onclick="toggleMobileHistory()"></div>
+    <div id="history-drawer"
+        class="lg:col-span-1 space-y-6 history-drawer lg:translate-y-0 lg:static lg:block lg:bg-transparent lg:border-none lg:p-0 lg:shadow-none lg:max-h-full"
+        style="animation-delay: 0.2s">
+        <div class="mobile-handle lg:hidden"></div>
+        <!-- Statistics Card -->
+        <div id="stats-container"
+            class="premium-glass rounded-3xl p-6 border-[var(--glass-border)] bg-gradient-to-br from-orange-500/5 to-pink-500/5">
+            <h3 class="text-lg font-bold mb-4 flex items-center">
+                <i class="fas fa-chart-line mr-2 text-orange-500"></i>Thống kê & Tài chính
+            </h3>
+            <div class="grid grid-cols-1 gap-4">
+                <div
+                    class="flex justify-between items-center p-3 rounded-xl bg-[var(--input-bg)] border border-[var(--glass-border)]">
+                    <span class="text-xs text-[var(--text-muted)] font-bold uppercase tracking-wider">Tổng tiền
+                        trúng</span>
+                    <span id="stat-total-win" class="text-xl font-black text-green-400">0đ</span>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="p-3 rounded-xl bg-[var(--input-bg)] border border-[var(--glass-border)] text-center">
+                        <p class="text-[10px] text-[var(--text-muted)] font-bold uppercase mb-1">Đã quét</p>
+                        <p id="stat-scanned" class="text-xl font-black">0</p>
+                    </div>
+                    <div class="p-3 rounded-xl bg-[var(--input-bg)] border border-[var(--glass-border)] text-center">
+                        <p class="text-[10px] text-[var(--text-muted)] font-bold uppercase mb-1">Số lần trúng</p>
+                        <p id="stat-lucky" class="text-xl font-black text-orange-400">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center justify-between mb-2">
+            <h3 class="text-lg font-bold flex items-center">
+                <i class="fas fa-history mr-2 text-[var(--text-muted)]"></i>Lịch sử quét
+            </h3>
+            <button onclick="clearHistory()"
+                class="text-[10px] uppercase font-bold text-[var(--text-muted)] hover:text-red-400 transition-colors">
+                Xóa tất cả
+            </button>
+        </div>
+
+        <div id="history-list" class="space-y-4 max-h-[50vh] lg:max-h-[80vh] overflow-y-auto pr-2 custom-scrollbar">
+            <!-- History items injected here -->
+            <div class="text-center py-20 opacity-30 italic text-sm" id="empty-history">
+                Chưa có vé nào được quét
+            </div>
+        </div>
+    </div>
+
+</div>
